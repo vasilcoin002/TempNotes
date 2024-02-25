@@ -13,7 +13,7 @@ public class NoteController {
     }
 
     @GetMapping
-    public Note getNote(@RequestParam(name = "id") String id) {
+    public Note getNote(@RequestParam String id) {
         return noteService.getNote(id);
     }
 
@@ -23,7 +23,7 @@ public class NoteController {
     }
 
     @DeleteMapping
-    public void deleteNote(@RequestParam(name = "id") String id) {
+    public void deleteNote(@RequestParam String id) {
         noteService.deleteNote(id);
     }
 
