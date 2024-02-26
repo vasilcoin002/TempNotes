@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Service
 public class UserService {
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -36,7 +36,6 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-
     public void updateUser(UserBody userBody) {
         if (userBody.getId() == null) {
             throw new IllegalArgumentException("Id must be given");
@@ -47,6 +46,10 @@ public class UserService {
         User user = getUser(userBody.getId());
         user.setEmail(userBody.getEmail());
         user.setPassword(userBody.getPassword());
+        userRepository.save(user);
+    }
+
+    public void updateUser(User user) {
         userRepository.save(user);
     }
 

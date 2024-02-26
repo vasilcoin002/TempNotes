@@ -1,17 +1,22 @@
 package org.example.tempnotes.notes;
 
+import org.example.tempnotes.users.User;
+import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
 public class NoteService {
     private final NoteRepository noteRepository;
+    private final UserService userService;
 
-    public NoteService(NoteRepository noteRepository) {
+    public NoteService(NoteRepository noteRepository, UserService userService) {
         this.noteRepository = noteRepository;
+        this.userService = userService;
     }
 
     public Note getNote(String id) {
@@ -21,19 +26,24 @@ public class NoteService {
     }
 
     public void addNote(NoteBody noteBody) {
-        if (
-                (noteBody.getTitle() == null || noteBody.getTitle().isEmpty())
-                    &&
-                (noteBody.getBody() == null || noteBody.getBody().isEmpty())
-        ) {
+        if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
             throw new IllegalArgumentException("Title or body must be given");
         }
+        if (noteBody.getUserId() == null) {
+            throw new IllegalArgumentException("UserId must be given");
+        }
+        User user = userService.getUser(noteBody.getUserId());
+
         Note note = new Note(
                 noteBody.getTitle(),
                 noteBody.getBody(),
                 LocalDate.parse(noteBody.getDestroyAtTime())
         );
-        noteRepository.save(note);
+        note = noteRepository.save(note);
+        List<String> notesIdList = user.getNotesIdList();
+        notesIdList.add(note.getId());
+        user.setNotesIdList(notesIdList);
+        userService.updateUser(user);
     }
 
     public void deleteNote(String id) {
@@ -41,17 +51,15 @@ public class NoteService {
             throw new IllegalArgumentException("The id mustn't be null");
         }
         noteRepository.deleteById(id);
+
+        // TODO connect deleteNote method with user
     }
 
     public void updateNote(NoteBody noteBody) throws IllegalArgumentException {
         if (noteBody.getId() == null) {
             throw new IllegalArgumentException("The id field mustn't be null");
         }
-        if (
-                (noteBody.getTitle() == null || noteBody.getTitle().isEmpty())
-                    &&
-                (noteBody.getBody() == null || noteBody.getBody().isEmpty())
-        ) {
+        if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
             deleteNote(noteBody.getId());
         } else {
             Note prevNote = getNote(noteBody.getId());
@@ -61,5 +69,9 @@ public class NoteService {
             prevNote.setDestroyAtTime(LocalDate.parse(noteBody.getDestroyAtTime()));
             noteRepository.save(prevNote);
         }
+    }
+
+    private boolean noteIsEmpty(String title, String body) {
+        return (title == null || title.isEmpty()) && (body == null || body.isEmpty());
     }
 }

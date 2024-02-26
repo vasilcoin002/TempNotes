@@ -9,6 +9,8 @@ import java.util.Date;
 @Data
 public class NoteBody {
     private String id;
+    private String userId;
+    // TODO delete userId when JWT token will be working
     private String title;
     private String body;
     private String destroyAtTime;
