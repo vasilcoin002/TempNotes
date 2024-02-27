@@ -1,6 +1,7 @@
 package org.example.tempnotes.users;
 
-import org.example.tempnotes.notes.Note;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class UserService {
 
     public User getUser(String id) {
         Optional<User> optionalUser = userRepository.findById(id);
-        optionalUser.orElseThrow(() -> new NoSuchElementException("User with id " + id + " not found"));
+        optionalUser.orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
         return optionalUser.get();
     }
 

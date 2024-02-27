@@ -1,5 +1,7 @@
 package org.example.tempnotes.users;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,8 +14,12 @@ public class UserController {
     }
 
     @GetMapping
-    public User getUser(@RequestParam String id) {
-        return userService.getUser(id);
+    public ResponseEntity<?> getUser(@RequestParam String id) {
+        try {
+            return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping
