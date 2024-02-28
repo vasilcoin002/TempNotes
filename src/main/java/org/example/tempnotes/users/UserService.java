@@ -22,12 +22,12 @@ public class UserService {
         return optionalUser.get();
     }
 
-    public void addUser(UserBody userBody) {
+    public User addUser(UserBody userBody) {
         if (emailOrPasswordIsWrong(userBody.getEmail(), userBody.getPassword())) {
             throw new IllegalArgumentException("Email and password must be given");
         }
         User user = new User(userBody.getEmail(), userBody.getPassword(), new ArrayList<>());
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public void deleteUser(String id) {
@@ -37,7 +37,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public void updateUser(UserBody userBody) {
+    public User updateUser(UserBody userBody) {
         if (userBody.getId() == null) {
             throw new IllegalArgumentException("Id must be given");
         }
@@ -47,7 +47,7 @@ public class UserService {
         User user = getUser(userBody.getId());
         user.setEmail(userBody.getEmail());
         user.setPassword(userBody.getPassword());
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public void updateUser(User user) {

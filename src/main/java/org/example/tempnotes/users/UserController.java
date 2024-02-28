@@ -23,17 +23,30 @@ public class UserController {
     }
 
     @PostMapping
-    public void addUser(@RequestBody UserBody userBody) {
-        userService.addUser(userBody);
+    public ResponseEntity<?> addUser(@RequestBody UserBody userBody) {
+        try {
+            return new ResponseEntity<>(userService.addUser(userBody), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping
-    public void deleteUser(@RequestParam String id) {
-        userService.deleteUser(id);
+    public ResponseEntity<?> deleteUser(@RequestParam String id) {
+        try {
+            userService.deleteUser(id);
+            return new ResponseEntity<>("user with id " + id + " has been successfully deleted", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping
-    public void updateUser(@RequestBody UserBody userBody) {
-        userService.updateUser(userBody);
+    public ResponseEntity<?> updateUser(@RequestBody UserBody userBody) {
+        try {
+            return new ResponseEntity<>(userService.updateUser(userBody), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 }
