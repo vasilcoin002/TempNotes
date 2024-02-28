@@ -1,5 +1,7 @@
 package org.example.tempnotes.notes;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,22 +15,39 @@ public class NoteController {
     }
 
     @GetMapping
-    public Note getNote(@RequestParam String id) {
-        return noteService.getNote(id);
+    public ResponseEntity<?> getNote(@RequestParam String id) {
+        try {
+            return new ResponseEntity<>(noteService.getNote(id), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping
-    public void addNote(@RequestBody NoteBody noteBody) {
-        noteService.addNote(noteBody);
+    public ResponseEntity<?> addNote(@RequestBody NoteBody noteBody) {
+        try {
+            return new ResponseEntity<>(noteService.addNote(noteBody), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping
-    public void deleteNote(@RequestParam String id) {
-        noteService.deleteNote(id);
+    public ResponseEntity<?> deleteNote(@RequestParam String id) {
+        try {
+            noteService.deleteNote(id);
+            return new ResponseEntity<>("Note with id " + id + " has been successfully deleted", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping
-    public void updateNote(@RequestBody NoteBody noteBody) {
-        noteService.updateNote(noteBody);
+    public ResponseEntity<?> updateNote(@RequestBody NoteBody noteBody) {
+        try {
+            return new ResponseEntity<>(noteService.updateNote(noteBody), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 }

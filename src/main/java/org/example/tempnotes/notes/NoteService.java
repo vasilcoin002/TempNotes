@@ -25,7 +25,7 @@ public class NoteService {
         return optionalNote.get();
     }
 
-    public void addNote(NoteBody noteBody) {
+    public Note addNote(NoteBody noteBody) {
         if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
             throw new IllegalArgumentException("Title or body must be given");
         }
@@ -44,6 +44,7 @@ public class NoteService {
         notesIdList.add(note.getId());
         user.setNotesIdList(notesIdList);
         userService.updateUser(user);
+        return note;
     }
 
     public void deleteNote(String id) {
@@ -55,19 +56,19 @@ public class NoteService {
         // TODO connect deleteNote method with user
     }
 
-    public void updateNote(NoteBody noteBody) throws IllegalArgumentException {
+    public Note updateNote(NoteBody noteBody) throws IllegalArgumentException {
         if (noteBody.getId() == null) {
             throw new IllegalArgumentException("The id field mustn't be null");
         }
         if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
-            deleteNote(noteBody.getId());
+            throw new IllegalArgumentException("Title or body mustn't be empty or null");
         } else {
             Note prevNote = getNote(noteBody.getId());
 
             prevNote.setTitle(noteBody.getTitle());
             prevNote.setBody(noteBody.getBody());
             prevNote.setDestroyAtTime(LocalDate.parse(noteBody.getDestroyAtTime()));
-            noteRepository.save(prevNote);
+            return noteRepository.save(prevNote);
         }
     }
 
