@@ -13,6 +13,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @CrossOrigin(origins = "*")
     @GetMapping
     public ResponseEntity<?> getUser(@RequestParam String id) {
         try {
@@ -22,6 +23,7 @@ public class UserController {
         }
     }
 
+    @CrossOrigin(origins = "*")
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody UserBody userBody) {
         try {
@@ -31,6 +33,7 @@ public class UserController {
         }
     }
 
+    @CrossOrigin(origins = "*")
     @DeleteMapping
     public ResponseEntity<?> deleteUser(@RequestParam String id) {
         try {
@@ -41,6 +44,7 @@ public class UserController {
         }
     }
 
+    @CrossOrigin(origins = "*")
     @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody UserBody userBody) {
         try {
