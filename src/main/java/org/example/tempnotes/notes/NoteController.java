@@ -13,11 +13,19 @@ public class NoteController {
     public NoteController(NoteService noteService) {
         this.noteService = noteService;
     }
-
-    @GetMapping
+    @GetMapping("note")
     public ResponseEntity<?> getNote(@RequestParam String id) {
         try {
             return new ResponseEntity<>(noteService.getNote(id), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("userNotes")
+    public ResponseEntity<?> getUserNotes(@RequestParam String userId) {
+        try {
+            return new ResponseEntity<>(noteService.getUserNotes(userId), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

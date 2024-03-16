@@ -5,6 +5,7 @@ import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -23,6 +24,15 @@ public class NoteService {
         Optional<Note> optionalNote = noteRepository.findById(id);
         optionalNote.orElseThrow(() -> new NoSuchElementException("Note with id " + id + " not found"));
         return optionalNote.get();
+    }
+
+    public List<Note> getUserNotes(String userId) {
+        User user = userService.getUser(userId);
+        List<String> notesIdList = user.getNotesIdList();
+        if (notesIdList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return noteRepository.findAllById(notesIdList);
     }
 
     public Note addNote(NoteBody noteBody) {
