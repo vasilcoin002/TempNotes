@@ -47,7 +47,7 @@ public class NoteService {
         Note note = new Note(
                 noteBody.getTitle(),
                 noteBody.getDescription(),
-                LocalDate.parse(noteBody.getDestroyAtTime())
+                LocalDate.parse(noteBody.getExpiresAt())
         );
         note = noteRepository.save(note);
         List<String> notesIdList = user.getNotesIdList();
@@ -77,7 +77,7 @@ public class NoteService {
 
             prevNote.setTitle(noteBody.getTitle());
             prevNote.setDescription(noteBody.getDescription());
-            prevNote.setDestroyAtTime(LocalDate.parse(noteBody.getDestroyAtTime()));
+            prevNote.setExpiresAt(LocalDate.parse(noteBody.getExpiresAt()));
             return noteRepository.save(prevNote);
         }
     }

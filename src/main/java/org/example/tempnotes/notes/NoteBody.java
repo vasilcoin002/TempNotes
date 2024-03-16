@@ -13,12 +13,12 @@ public class NoteBody {
     // TODO delete userId when JWT token will be working
     private String title;
     private String description;
-    private String destroyAtTime;
+    private String expiresAt;
 
-    public NoteBody(String id, String title, String description, String createdAt) {
+    public NoteBody(String id, String title, String description, String expiresAt) {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.destroyAtTime = createdAt;
+        this.expiresAt = expiresAt;
     }
 }
