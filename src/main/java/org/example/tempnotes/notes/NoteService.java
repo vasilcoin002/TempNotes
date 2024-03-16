@@ -36,7 +36,7 @@ public class NoteService {
     }
 
     public Note addNote(NoteBody noteBody) {
-        if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
+        if (noteIsEmpty(noteBody.getTitle(), noteBody.getDescription())) {
             throw new IllegalArgumentException("Title or body must be given");
         }
         if (noteBody.getUserId() == null) {
@@ -46,7 +46,7 @@ public class NoteService {
 
         Note note = new Note(
                 noteBody.getTitle(),
-                noteBody.getBody(),
+                noteBody.getDescription(),
                 LocalDate.parse(noteBody.getDestroyAtTime())
         );
         note = noteRepository.save(note);
@@ -70,13 +70,13 @@ public class NoteService {
         if (noteBody.getId() == null) {
             throw new IllegalArgumentException("The id field mustn't be null");
         }
-        if (noteIsEmpty(noteBody.getTitle(), noteBody.getBody())) {
+        if (noteIsEmpty(noteBody.getTitle(), noteBody.getDescription())) {
             throw new IllegalArgumentException("Title or body mustn't be empty or null");
         } else {
             Note prevNote = getNote(noteBody.getId());
 
             prevNote.setTitle(noteBody.getTitle());
-            prevNote.setBody(noteBody.getBody());
+            prevNote.setDescription(noteBody.getDescription());
             prevNote.setDestroyAtTime(LocalDate.parse(noteBody.getDestroyAtTime()));
             return noteRepository.save(prevNote);
         }

@@ -13,12 +13,12 @@ public class Note {
     @Id
     private String id;
     private String title;
-    private String body;
+    private String description;
     private LocalDate destroyAtTime;
 
-    public Note(String title, String body, LocalDate destroyAtTime) {
+    public Note(String title, String description, LocalDate destroyAtTime) {
         this.title = title;
-        this.body = body;
+        this.description = description;
         this.destroyAtTime = destroyAtTime;
     }
 }
