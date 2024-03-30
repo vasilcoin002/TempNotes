@@ -42,18 +42,26 @@ public class NoteService {
         if (noteBody.getUserId() == null) {
             throw new IllegalArgumentException("UserId must be given");
         }
+        System.out.println(2);
         User user = userService.getUser(noteBody.getUserId());
-
+        System.out.println(3);
         Note note = new Note(
                 noteBody.getTitle(),
                 noteBody.getDescription(),
-                LocalDate.parse(noteBody.getExpiresAt())
+                noteBody.getExpirationDate() == null ?
+                        null : LocalDate.parse(noteBody.getExpirationDate())
         );
+        System.out.println(4);
         note = noteRepository.save(note);
+        System.out.println(5);
         List<String> notesIdList = user.getNotesIdList();
+        System.out.println(6);
         notesIdList.add(note.getId());
+        System.out.println(7);
         user.setNotesIdList(notesIdList);
+        System.out.println(8);
         userService.updateUser(user);
+        System.out.println(9);
         return note;
     }
 
@@ -62,27 +70,27 @@ public class NoteService {
             throw new IllegalArgumentException("The id mustn't be null");
         }
         noteRepository.deleteById(id);
-
+        // TODO remove indexes of notes from user obj when note deletes
         // TODO connect deleteNote method with user
     }
 
     public Note updateNote(NoteBody noteBody) throws IllegalArgumentException {
         if (noteBody.getId() == null) {
-            throw new IllegalArgumentException("The id field mustn't be null");
+            throw new IllegalArgumentException("The id attr mustn't be null");
         }
         if (noteIsEmpty(noteBody.getTitle(), noteBody.getDescription())) {
-            throw new IllegalArgumentException("Title or body mustn't be empty or null");
+            throw new IllegalArgumentException("Title or body mustn't be empty");
         } else {
             Note prevNote = getNote(noteBody.getId());
 
             prevNote.setTitle(noteBody.getTitle());
             prevNote.setDescription(noteBody.getDescription());
-            prevNote.setExpiresAt(LocalDate.parse(noteBody.getExpiresAt()));
+            prevNote.setExpirationDate(LocalDate.parse(noteBody.getExpirationDate()));
             return noteRepository.save(prevNote);
         }
     }
 
-    private boolean noteIsEmpty(String title, String body) {
-        return (title == null || title.isEmpty()) && (body == null || body.isEmpty());
+    private boolean noteIsEmpty(String title, String description) {
+        return title.isEmpty() && description.isEmpty();
     }
 }

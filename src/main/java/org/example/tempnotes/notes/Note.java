@@ -14,11 +14,11 @@ public class Note {
     private String id;
     private String title;
     private String description;
-    private LocalDate expiresAt;
+    private LocalDate expirationDate;
 
-    public Note(String title, String description, LocalDate expiresAt) {
+    public Note(String title, String description, LocalDate expirationDate) {
         this.title = title;
         this.description = description;
-        this.expiresAt = expiresAt;
+        this.expirationDate = expirationDate;
     }
 }
