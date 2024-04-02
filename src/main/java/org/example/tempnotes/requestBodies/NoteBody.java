@@ -1,4 +1,4 @@
-package org.example.tempnotes.notes;
+package org.example.tempnotes.requestBodies;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

@@ -1,5 +1,7 @@
 package org.example.tempnotes.notes;
 
+import org.example.tempnotes.requestBodies.NoteBody;
+import org.example.tempnotes.requestBodies.UpdateUserNotesOrderBody;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;
@@ -90,7 +92,25 @@ public class NoteService {
         }
     }
 
+    // TODO make the method in which you can change the order of notes
+
+
     private boolean noteIsEmpty(String title, String description) {
         return title.isEmpty() && description.isEmpty();
+    }
+
+    public List<String> updateUserNotesOrderBody(UpdateUserNotesOrderBody userNotesOrderBody) {
+        String userId = userNotesOrderBody.getUserId();
+        if (userId == null) {
+            throw new IllegalArgumentException("The userId attr mustn't be null");
+        }
+        List<String> newNotesIdList = userNotesOrderBody.getNewNotesIdList();
+        if (newNotesIdList == null || newNotesIdList.isEmpty()) {
+            throw new IllegalArgumentException("The newNotesIdList attr mustn't be null or empty");
+        }
+
+        User user = userService.getUser(userId);
+        user.setNotesIdList(newNotesIdList);
+        return userService.updateUser(user).getNotesIdList();
     }
 }

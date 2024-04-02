@@ -1,5 +1,7 @@
 package org.example.tempnotes.notes;
 
+import org.example.tempnotes.requestBodies.UpdateUserNotesOrderBody;
+import org.example.tempnotes.requestBodies.NoteBody;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,10 +58,20 @@ public class NoteController {
     }
 
     @CrossOrigin(origins = "*")
-    @PutMapping
+    @PutMapping("note")
     public ResponseEntity<?> updateNote(@RequestBody NoteBody noteBody) {
         try {
             return new ResponseEntity<>(noteService.updateNote(noteBody), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @CrossOrigin(origins = "*")
+    @PutMapping("updateUserNotesOrder")
+    public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesOrderBody userNotesOrderBody) {
+        try {
+            return new ResponseEntity<>(noteService.updateUserNotesOrderBody(userNotesOrderBody), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

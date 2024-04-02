@@ -50,8 +50,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void updateUser(User user) {
-        userRepository.save(user);
+    public User updateUser(User user) {
+        try {
+            return userRepository.save(user);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     private boolean emailOrPasswordIsWrong(String email, String password) {
