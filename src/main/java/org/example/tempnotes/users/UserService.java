@@ -47,12 +47,14 @@ public class UserService {
         User user = getUser(userBody.getId());
         user.setEmail(userBody.getEmail());
         user.setPassword(userBody.getPassword());
-        return userRepository.save(user);
+        user = userRepository.save(user);
+        return user;
     }
 
     public User updateUser(User user) {
         try {
-            return userRepository.save(user);
+            user = userRepository.save(user);
+            return user;
         }
         catch (Exception e) {
             throw new RuntimeException(e.getMessage());

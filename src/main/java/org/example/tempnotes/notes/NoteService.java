@@ -7,10 +7,7 @@ import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class NoteService {
@@ -34,7 +31,17 @@ public class NoteService {
         if (notesIdList.isEmpty()) {
             return new ArrayList<>();
         }
-        return noteRepository.findAllById(notesIdList);
+        List<Note> unsortedNotesList = noteRepository.findAllById(notesIdList);
+        List<Note> sortedNotesList = new ArrayList<>();
+        for (int i = 0; i < unsortedNotesList.size(); i++) {
+            int finalI = i;
+            sortedNotesList.add(
+                unsortedNotesList.stream().filter(note -> Objects.equals(
+                    note.getId(),
+                    notesIdList.get(finalI))
+                ).findFirst().orElse(null));
+        }
+        return sortedNotesList;
     }
 
     public Note addNote(NoteBody noteBody) {
@@ -99,7 +106,7 @@ public class NoteService {
         return title.isEmpty() && description.isEmpty();
     }
 
-    public List<String> updateUserNotesOrderBody(UpdateUserNotesOrderBody userNotesOrderBody) {
+    public List<String> updateUserNotesOrder(UpdateUserNotesOrderBody userNotesOrderBody) {
         String userId = userNotesOrderBody.getUserId();
         if (userId == null) {
             throw new IllegalArgumentException("The userId attr mustn't be null");
@@ -111,6 +118,7 @@ public class NoteService {
 
         User user = userService.getUser(userId);
         user.setNotesIdList(newNotesIdList);
-        return userService.updateUser(user).getNotesIdList();
+        user = userService.updateUser(user);
+        return user.getNotesIdList();
     }
 }

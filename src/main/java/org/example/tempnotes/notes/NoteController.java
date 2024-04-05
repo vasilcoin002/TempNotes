@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/v1/notes")
 public class NoteController {
@@ -30,7 +32,8 @@ public class NoteController {
     @GetMapping("userNotes")
     public ResponseEntity<?> getUserNotes(@RequestParam String userId) {
         try {
-            return new ResponseEntity<>(noteService.getUserNotes(userId), HttpStatus.OK);
+            List<Note> notes = noteService.getUserNotes(userId);
+            return new ResponseEntity<>(notes, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -71,7 +74,8 @@ public class NoteController {
     @PutMapping("updateUserNotesOrder")
     public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesOrderBody userNotesOrderBody) {
         try {
-            return new ResponseEntity<>(noteService.updateUserNotesOrderBody(userNotesOrderBody), HttpStatus.OK);
+            List<String> res = noteService.updateUserNotesOrder(userNotesOrderBody);
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
