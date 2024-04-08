@@ -51,26 +51,18 @@ public class NoteService {
         if (noteBody.getUserId() == null) {
             throw new IllegalArgumentException("UserId must be given");
         }
-        System.out.println(2);
         User user = userService.getUser(noteBody.getUserId());
-        System.out.println(3);
         Note note = new Note(
                 noteBody.getTitle(),
                 noteBody.getDescription(),
                 noteBody.getExpirationDate() == null ?
                         null : LocalDate.parse(noteBody.getExpirationDate())
         );
-        System.out.println(4);
         note = noteRepository.save(note);
-        System.out.println(5);
         List<String> notesIdList = user.getNotesIdList();
-        System.out.println(6);
         notesIdList.add(note.getId());
-        System.out.println(7);
         user.setNotesIdList(notesIdList);
-        System.out.println(8);
         userService.updateUser(user);
-        System.out.println(9);
         return note;
     }
 

@@ -20,6 +20,5 @@ public class NoteBody {
         this.title = title;
         this.description = description;
         this.expirationDate = expirationDate;
-        System.out.println(1);
     }
 }
