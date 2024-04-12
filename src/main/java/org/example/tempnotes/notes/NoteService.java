@@ -86,16 +86,9 @@ public class NoteService {
 
             prevNote.setTitle(noteBody.getTitle());
             prevNote.setDescription(noteBody.getDescription());
-            prevNote.setExpirationDate(LocalDate.parse(noteBody.getExpirationDate()));
+            prevNote.setExpirationDate(getLocalDateOrNullFromString(noteBody.getExpirationDate()));
             return noteRepository.save(prevNote);
         }
-    }
-
-    // TODO make the method in which you can change the order of notes
-
-
-    private boolean noteIsEmpty(String title, String description) {
-        return title.isEmpty() && description.isEmpty();
     }
 
     public List<String> updateUserNotesOrder(UpdateUserNotesOrderBody userNotesOrderBody) {
@@ -112,5 +105,17 @@ public class NoteService {
         user.setNotesIdList(newNotesIdList);
         user = userService.updateUser(user);
         return user.getNotesIdList();
+    }
+
+    private boolean noteIsEmpty(String title, String description) {
+        return title.isEmpty() && description.isEmpty();
+    }
+
+    private LocalDate getLocalDateOrNullFromString(String date) {
+        if (date != null) {
+            return LocalDate.parse(date);
+        } else {
+            return null;
+        }
     }
 }
