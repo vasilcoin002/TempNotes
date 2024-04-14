@@ -1,7 +1,9 @@
 package org.example.tempnotes.users;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,16 +11,19 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
+    
     public User getUser(String id) {
         Optional<User> optionalUser = userRepository.findById(id);
-        optionalUser.orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
+        optionalUser.orElseThrow(() -> new UsernameNotFoundException("User with id " + id + " not found"));
+        return optionalUser.get();
+    }
+
+    public User getUserByEmail(String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        optionalUser.orElseThrow(() -> new UsernameNotFoundException("User " + email + " not found"));
         return optionalUser.get();
     }
 
@@ -26,7 +31,7 @@ public class UserService {
         if (emailOrPasswordIsWrong(userBody.getEmail(), userBody.getPassword())) {
             throw new IllegalArgumentException("Email and password must be given");
         }
-        User user = new User(userBody.getEmail(), userBody.getPassword(), new ArrayList<>());
+        User user = new User(userBody.getEmail(), userBody.getPassword(), new ArrayList<>(), Role.USER);
         return userRepository.save(user);
     }
 
