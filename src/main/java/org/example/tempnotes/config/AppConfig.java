@@ -2,8 +2,6 @@ package org.example.tempnotes.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.users.UserRepository;
-import org.example.tempnotes.users.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,28 +17,32 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class AppConfig {
 
-    private final UserService UserService;
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return UserService::getUserByEmail;
-    }
+    private final UserRepository userRepository;
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(userDetailsService());
         return authProvider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> userRepository
+                .findByEmail(username)
+                .orElseThrow(
+                        () -> new UsernameNotFoundException("user " + username + " not fot found")
+                );
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }

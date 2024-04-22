@@ -1,7 +1,7 @@
 package org.example.tempnotes.notes;
 
-import org.example.tempnotes.requestBodies.UpdateUserNotesOrderBody;
-import org.example.tempnotes.requestBodies.NoteBody;
+import org.example.tempnotes.requestDTO.UpdateUserNotesOrderBody;
+import org.example.tempnotes.requestDTO.NoteBody;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

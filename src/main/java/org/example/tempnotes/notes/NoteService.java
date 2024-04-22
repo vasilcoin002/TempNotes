@@ -1,7 +1,7 @@
 package org.example.tempnotes.notes;
 
-import org.example.tempnotes.requestBodies.NoteBody;
-import org.example.tempnotes.requestBodies.UpdateUserNotesOrderBody;
+import org.example.tempnotes.requestDTO.NoteBody;
+import org.example.tempnotes.requestDTO.UpdateUserNotesOrderBody;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;

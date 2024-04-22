@@ -1,5 +1,6 @@
 package org.example.tempnotes.users;
 
+import org.example.tempnotes.auth.RegisterRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +16,9 @@ public class UserController {
 
     @CrossOrigin(origins = "*")
     @GetMapping
-    public ResponseEntity<?> getUser(@RequestParam String id) {
+    public ResponseEntity<?> getUser(@RequestBody UserRequest request) {
         try {
-            return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
+            return new ResponseEntity<>(userService.getUser(request), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -25,9 +26,9 @@ public class UserController {
 
     @CrossOrigin(origins = "*")
     @PostMapping
-    public ResponseEntity<?> addUser(@RequestBody UserBody userBody) {
+    public ResponseEntity<?> addUser(@RequestBody RegisterRequest request) {
         try {
-            return new ResponseEntity<>(userService.addUser(userBody), HttpStatus.CREATED);
+            return new ResponseEntity<>(userService.addUser(request), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

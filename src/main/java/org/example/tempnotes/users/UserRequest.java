@@ -1,4 +1,4 @@
-package org.example.tempnotes.auth;
+package org.example.tempnotes.users;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthRequest {
+public class UserRequest {
     private String email;
-    private String password;
 }

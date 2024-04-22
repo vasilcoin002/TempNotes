@@ -1,10 +1,6 @@
-package org.example.tempnotes.requestBodies;
+package org.example.tempnotes.requestDTO;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-
-import java.time.LocalDate;
-import java.util.Date;
 
 @Data
 public class NoteBody {

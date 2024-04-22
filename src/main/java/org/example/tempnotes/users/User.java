@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +24,7 @@ import java.util.List;
 public class User implements UserDetails {
     @Id
     private String id;
+    @Indexed(unique = true)
     private String email;
     private String password;
     private List<String> notesIdList;
@@ -43,7 +45,12 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return null;
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override

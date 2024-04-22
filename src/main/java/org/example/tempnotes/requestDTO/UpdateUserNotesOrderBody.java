@@ -1,4 +1,4 @@
-package org.example.tempnotes.requestBodies;
+package org.example.tempnotes.requestDTO;
 
 import lombok.Data;
 
