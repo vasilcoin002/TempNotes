@@ -2,6 +2,9 @@ package org.example.tempnotes.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.config.JwtService;
+import org.example.tempnotes.DTOs.AuthenticationRequest;
+import org.example.tempnotes.DTOs.AuthenticationResponse;
+import org.example.tempnotes.DTOs.RegisterRequest;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
 import org.springframework.lang.NonNull;

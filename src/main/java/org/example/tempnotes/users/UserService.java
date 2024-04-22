@@ -1,7 +1,8 @@
 package org.example.tempnotes.users;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tempnotes.auth.RegisterRequest;
+import org.example.tempnotes.DTOs.RegisterRequest;
+import org.example.tempnotes.DTOs.UserRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class UserService {
         );
     }
 
+    // TODO delete all the notes which user had from the db
     public void deleteUser(String id) {
         if (id == null) {
             throw new IllegalArgumentException("Id must be given");
@@ -54,16 +56,16 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public User updateUser(UserBody userBody) {
-        if (userBody.getId() == null) {
+    public User updateUser(UserRequest request) {
+        if (request.getId() == null) {
             throw new IllegalArgumentException("Id must be given");
         }
-        if (emailOrPasswordIsWrong(userBody.getEmail(), userBody.getPassword())) {
+        if (emailOrPasswordIsWrong(request.getEmail(), request.getPassword())) {
             throw new IllegalArgumentException("Email and password must be given");
         }
-        User user = getUser(userBody.getId());
-        user.setEmail(userBody.getEmail());
-        user.setPassword(userBody.getPassword());
+        User user = getUser(request.getId());
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
         user = userRepository.save(user);
         return user;
     }

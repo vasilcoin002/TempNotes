@@ -1,5 +1,7 @@
 package org.example.tempnotes.auth;
 
+import org.example.tempnotes.DTOs.AuthenticationRequest;
+import org.example.tempnotes.DTOs.RegisterRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

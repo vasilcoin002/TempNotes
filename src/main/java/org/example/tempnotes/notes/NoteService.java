@@ -1,7 +1,7 @@
 package org.example.tempnotes.notes;
 
-import org.example.tempnotes.requestDTO.NoteBody;
-import org.example.tempnotes.requestDTO.UpdateUserNotesOrderBody;
+import org.example.tempnotes.DTOs.NoteRequest;
+import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
 import org.springframework.stereotype.Service;
@@ -44,19 +44,19 @@ public class NoteService {
         return sortedNotesList;
     }
 
-    public Note addNote(NoteBody noteBody) {
-        if (noteIsEmpty(noteBody.getTitle(), noteBody.getDescription())) {
+    public Note addNote(NoteRequest noteRequest) {
+        if (noteIsEmpty(noteRequest.getTitle(), noteRequest.getDescription())) {
             throw new IllegalArgumentException("Title or body must be given");
         }
-        if (noteBody.getUserId() == null) {
+        if (noteRequest.getUserId() == null) {
             throw new IllegalArgumentException("UserId must be given");
         }
-        User user = userService.getUser(noteBody.getUserId());
+        User user = userService.getUser(noteRequest.getUserId());
         Note note = new Note(
-                noteBody.getTitle(),
-                noteBody.getDescription(),
-                noteBody.getExpirationDate() == null ?
-                        null : LocalDate.parse(noteBody.getExpirationDate())
+                noteRequest.getTitle(),
+                noteRequest.getDescription(),
+                noteRequest.getExpirationDate() == null ?
+                        null : LocalDate.parse(noteRequest.getExpirationDate())
         );
         note = noteRepository.save(note);
         List<String> notesIdList = user.getNotesIdList();
@@ -75,23 +75,23 @@ public class NoteService {
         // TODO connect deleteNote method with user
     }
 
-    public Note updateNote(NoteBody noteBody) throws IllegalArgumentException {
-        if (noteBody.getId() == null) {
+    public Note updateNote(NoteRequest noteRequest) throws IllegalArgumentException {
+        if (noteRequest.getId() == null) {
             throw new IllegalArgumentException("The id attr mustn't be null");
         }
-        if (noteIsEmpty(noteBody.getTitle(), noteBody.getDescription())) {
+        if (noteIsEmpty(noteRequest.getTitle(), noteRequest.getDescription())) {
             throw new IllegalArgumentException("Title or body mustn't be empty");
         } else {
-            Note prevNote = getNote(noteBody.getId());
+            Note prevNote = getNote(noteRequest.getId());
 
-            prevNote.setTitle(noteBody.getTitle());
-            prevNote.setDescription(noteBody.getDescription());
-            prevNote.setExpirationDate(getLocalDateOrNullFromString(noteBody.getExpirationDate()));
+            prevNote.setTitle(noteRequest.getTitle());
+            prevNote.setDescription(noteRequest.getDescription());
+            prevNote.setExpirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()));
             return noteRepository.save(prevNote);
         }
     }
 
-    public List<String> updateUserNotesOrder(UpdateUserNotesOrderBody userNotesOrderBody) {
+    public List<String> updateUserNotesOrder(UpdateUserNotesOrderRequest userNotesOrderBody) {
         String userId = userNotesOrderBody.getUserId();
         if (userId == null) {
             throw new IllegalArgumentException("The userId attr mustn't be null");

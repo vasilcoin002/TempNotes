@@ -1,6 +1,7 @@
 package org.example.tempnotes.users;
 
-import org.example.tempnotes.auth.RegisterRequest;
+import org.example.tempnotes.DTOs.RegisterRequest;
+import org.example.tempnotes.DTOs.UserRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +48,7 @@ public class UserController {
 
     @CrossOrigin(origins = "*")
     @PutMapping
-    public ResponseEntity<?> updateUser(@RequestBody UserBody userBody) {
+    public ResponseEntity<?> updateUser(@RequestBody UserRequest userBody) {
         try {
             return new ResponseEntity<>(userService.updateUser(userBody), HttpStatus.OK);
         } catch (Exception e) {
