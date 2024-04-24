@@ -6,41 +6,60 @@ import org.example.tempnotes.config.JwtService;
 import org.example.tempnotes.DTOs.AuthenticationRequest;
 import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.RegisterRequest;
+import org.example.tempnotes.users.Role;
 import org.example.tempnotes.users.User;
+import org.example.tempnotes.users.UserRepository;
 import org.example.tempnotes.users.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthenticationResponse register(@NonNull RegisterRequest request) {
+    public AuthenticationResponse register(@NonNull UserRequest request) {
         checkUserRequest(request);
-        if (userService.isUserExistsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("user \"" + request.getEmail() + "\" already exists");
         }
-        User user = userService.addUser(request);
+        User user = userRepository.save(
+                User.builder()
+                        .email(request.getEmail())
+                        .password(passwordEncoder.encode(request.getPassword()))
+                        .notesIdList(new ArrayList<>())
+                        .role(Role.USER)
+                    .build()
+        );
         String token = jwtService.generateToken(user);
         return new AuthenticationResponse(token);
     }
 
     public AuthenticationResponse authenticate(@NonNull AuthenticationRequest request) {
         checkUserRequest(request);
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
                 )
         );
-        User user = userService.getUserByEmail(request.getEmail());
+        User user = userRepository
+                .findByEmail(request.getEmail()).orElseThrow(
+                        () -> new UsernameNotFoundException("user " + request.getEmail() + " not found")
+                );
         String token = jwtService.generateToken(user);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return new AuthenticationResponse(token);
@@ -68,9 +87,10 @@ public class AuthenticationService {
             user.getNotesIdList() != null
         ) {
             SecurityContextHolder.getContext().setAuthentication(
-                    new UsernamePasswordAuthenticationToken(
-                            user, null, user.getAuthorities()
-                    )
+                new UsernamePasswordAuthenticationToken(
+                    user.getEmail(),
+                    user.getPassword()
+                )
             );
         }
     }
