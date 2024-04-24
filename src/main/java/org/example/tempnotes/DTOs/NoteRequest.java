@@ -5,8 +5,6 @@ import lombok.Data;
 @Data
 public class NoteRequest {
     private String id;
-    private String userId;
-    // TODO delete userId when JWT token will be working
     private String title;
     private String description;
     private String expirationDate;

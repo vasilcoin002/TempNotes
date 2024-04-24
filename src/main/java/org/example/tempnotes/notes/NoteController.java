@@ -1,5 +1,6 @@
 package org.example.tempnotes.notes;
 
+import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
 import org.example.tempnotes.DTOs.NoteRequest;
 import org.springframework.http.HttpStatus;
@@ -8,39 +9,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("api/v1/notes")
 public class NoteController {
 
     private final NoteService noteService;
 
-    public NoteController(NoteService noteService) {
-        this.noteService = noteService;
-    }
-
     @CrossOrigin(origins = "*")
-    @GetMapping("note")
-    public ResponseEntity<?> getNote(@RequestParam String id) {
+    @GetMapping("getNotes")
+    public ResponseEntity<?> getUserNotes() {
         try {
-            return new ResponseEntity<>(noteService.getNote(id), HttpStatus.OK);
+            return new ResponseEntity<>(noteService.getUserNotes(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
     @CrossOrigin(origins = "*")
-    @GetMapping("userNotes")
-    public ResponseEntity<?> getUserNotes(@RequestParam String userId) {
-        try {
-            List<Note> notes = noteService.getUserNotes(userId);
-            return new ResponseEntity<>(notes, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @CrossOrigin(origins = "*")
-    @PostMapping
+    @PostMapping("addNote")
     public ResponseEntity<?> addNote(@RequestBody NoteRequest noteRequest) {
         try {
             return new ResponseEntity<>(noteService.addNote(noteRequest), HttpStatus.CREATED);
@@ -50,7 +37,7 @@ public class NoteController {
     }
 
     @CrossOrigin(origins = "*")
-    @DeleteMapping
+    @DeleteMapping("deleteNote")
     public ResponseEntity<?> deleteNote(@RequestParam String id) {
         try {
             noteService.deleteNote(id);
@@ -61,7 +48,7 @@ public class NoteController {
     }
 
     @CrossOrigin(origins = "*")
-    @PutMapping("note")
+    @PutMapping("updateNote")
     public ResponseEntity<?> updateNote(@RequestBody NoteRequest noteRequest) {
         try {
             return new ResponseEntity<>(noteService.updateNote(noteRequest), HttpStatus.OK);

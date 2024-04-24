@@ -1,6 +1,7 @@
 package org.example.tempnotes.auth;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tempnotes.DTOs.UserRequest;
 import org.example.tempnotes.config.JwtService;
 import org.example.tempnotes.DTOs.AuthenticationRequest;
 import org.example.tempnotes.DTOs.AuthenticationResponse;
@@ -22,8 +23,9 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(@NonNull RegisterRequest request) {
+        checkUserRequest(request);
         if (userService.isUserExistsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("User \"" + request.getEmail() + "\" already exists");
+            throw new IllegalArgumentException("user \"" + request.getEmail() + "\" already exists");
         }
         User user = userService.addUser(request);
         String token = jwtService.generateToken(user);
@@ -31,6 +33,7 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(@NonNull AuthenticationRequest request) {
+        checkUserRequest(request);
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -41,5 +44,34 @@ public class AuthenticationService {
         String token = jwtService.generateToken(user);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return new AuthenticationResponse(token);
+    }
+
+    private void checkUserRequest(UserRequest request) {
+        if (request.getEmail() == null) {
+            throw new IllegalArgumentException("email is not provided");
+        }
+        if (request.getPassword() == null) {
+            throw new IllegalArgumentException("password is not provided");
+        }
+    }
+
+    public User getAuthenticatedUser() {
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    public void setAuthenticatedUser(User user) {
+        if (
+            user.getId() != null &&
+            user.getEmail() != null &&
+            user.getPassword() != null &&
+            user.getRole() != null &&
+            user.getNotesIdList() != null
+        ) {
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken(
+                            user, null, user.getAuthorities()
+                    )
+            );
+        }
     }
 }

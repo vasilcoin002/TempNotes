@@ -1,23 +1,24 @@
 package org.example.tempnotes.notes;
 
+import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.NoteRequest;
 import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
+import org.example.tempnotes.auth.AuthenticationService;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class NoteService {
+    private final AuthenticationService authenticationService;
     private final NoteRepository noteRepository;
     private final UserService userService;
-
-    public NoteService(NoteRepository noteRepository, UserService userService) {
-        this.noteRepository = noteRepository;
-        this.userService = userService;
-    }
 
     public Note getNote(String id) {
         Optional<Note> optionalNote = noteRepository.findById(id);
@@ -25,8 +26,8 @@ public class NoteService {
         return optionalNote.get();
     }
 
-    public List<Note> getUserNotes(String userId) {
-        User user = userService.getUser(userId);
+    public List<Note> getUserNotes() {
+        User user = userService.getUser();
         List<String> notesIdList = user.getNotesIdList();
         if (notesIdList.isEmpty()) {
             return new ArrayList<>();
@@ -45,24 +46,22 @@ public class NoteService {
     }
 
     public Note addNote(NoteRequest noteRequest) {
-        if (noteIsEmpty(noteRequest.getTitle(), noteRequest.getDescription())) {
-            throw new IllegalArgumentException("Title or body must be given");
+        checkNoteRequest(noteRequest);
+
+        User user = authenticationService.getAuthenticatedUser();
+        Note note = Note.builder()
+                            .title(noteRequest.getTitle())
+                            .description(noteRequest.getDescription())
+                        .build();
+        if (noteRequest.getExpirationDate() != null) {
+            note.setExpirationDate(LocalDate.parse(noteRequest.getExpirationDate()));
         }
-        if (noteRequest.getUserId() == null) {
-            throw new IllegalArgumentException("UserId must be given");
-        }
-        User user = userService.getUser(noteRequest.getUserId());
-        Note note = new Note(
-                noteRequest.getTitle(),
-                noteRequest.getDescription(),
-                noteRequest.getExpirationDate() == null ?
-                        null : LocalDate.parse(noteRequest.getExpirationDate())
-        );
         note = noteRepository.save(note);
         List<String> notesIdList = user.getNotesIdList();
         notesIdList.add(note.getId());
         user.setNotesIdList(notesIdList);
-        userService.updateUser(user);
+        user = userService.updateUser(user);
+        authenticationService.setAuthenticatedUser(user);
         return note;
     }
 
@@ -117,5 +116,9 @@ public class NoteService {
         } else {
             return null;
         }
+    }
+
+    public void checkNoteRequest(NoteRequest request) {
+
     }
 }
