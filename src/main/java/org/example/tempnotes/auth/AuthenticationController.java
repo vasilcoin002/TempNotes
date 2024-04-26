@@ -1,7 +1,6 @@
 package org.example.tempnotes.auth;
 
-import org.example.tempnotes.DTOs.AuthenticationRequest;
-import org.example.tempnotes.DTOs.RegisterRequest;
+import org.example.tempnotes.DTOs.UserRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +18,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("login")
-    public ResponseEntity<?> login(@RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<?> login(@RequestBody UserRequest authenticationRequest) {
         try {
             return new ResponseEntity<>(authenticationService.authenticate(authenticationRequest), HttpStatus.OK);
         }
@@ -29,7 +28,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> register(@RequestBody UserRequest registerRequest) {
         try {
             return new ResponseEntity<>(authenticationService.register(registerRequest), HttpStatus.OK);
         }

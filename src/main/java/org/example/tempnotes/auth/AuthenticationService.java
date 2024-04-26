@@ -1,16 +1,12 @@
 package org.example.tempnotes.auth;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.UserRequest;
 import org.example.tempnotes.config.JwtService;
-import org.example.tempnotes.DTOs.AuthenticationRequest;
-import org.example.tempnotes.DTOs.AuthenticationResponse;
-import org.example.tempnotes.DTOs.RegisterRequest;
 import org.example.tempnotes.users.Role;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserRepository;
-import org.example.tempnotes.users.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,7 +44,7 @@ public class AuthenticationService {
         return new AuthenticationResponse(token);
     }
 
-    public AuthenticationResponse authenticate(@NonNull AuthenticationRequest request) {
+    public AuthenticationResponse authenticate(@NonNull UserRequest request) {
         checkUserRequest(request);
 
         Authentication authentication = authenticationManager.authenticate(
@@ -86,10 +82,10 @@ public class AuthenticationService {
     public void setAuthenticatedUser(User user) {
         if (
                 user.getId() != null &&
-                user.getEmail() != null &&
-                user.getPassword() != null &&
-                user.getRole() != null &&
-                user.getNotesIdList() != null
+                        user.getEmail() != null &&
+                        user.getPassword() != null &&
+                        user.getRole() != null &&
+                        user.getNotesIdList() != null
         ) {
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(
