@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class AuthenticationService {
                         .password(passwordEncoder.encode(request.getPassword()))
                         .notesIdList(new ArrayList<>())
                         .role(Role.USER)
-                    .build()
+                        .build()
         );
         String token = jwtService.generateToken(user);
         return new AuthenticationResponse(token);
@@ -74,23 +75,27 @@ public class AuthenticationService {
         }
     }
 
+    public String generateToken(UserDetails userDetails) {
+        return jwtService.generateToken(userDetails);
+    }
+
     public User getAuthenticatedUser() {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     public void setAuthenticatedUser(User user) {
         if (
-            user.getId() != null &&
-            user.getEmail() != null &&
-            user.getPassword() != null &&
-            user.getRole() != null &&
-            user.getNotesIdList() != null
+                user.getId() != null &&
+                user.getEmail() != null &&
+                user.getPassword() != null &&
+                user.getRole() != null &&
+                user.getNotesIdList() != null
         ) {
             SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                    user.getEmail(),
-                    user.getPassword()
-                )
+                    new UsernamePasswordAuthenticationToken(
+                            user.getEmail(),
+                            user.getPassword()
+                    )
             );
         }
     }

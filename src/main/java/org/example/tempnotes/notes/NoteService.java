@@ -46,7 +46,6 @@ public class NoteService {
 
     public Note addNote(NoteRequest noteRequest) {
         checkNoteRequest(noteRequest);
-
         User user = userService.getAuthenticatedUser();
         Note note = Note.builder()
                             .title(noteRequest.getTitle())
@@ -58,9 +57,7 @@ public class NoteService {
         note = noteRepository.save(note);
         List<String> notesIdList = user.getNotesIdList();
         notesIdList.add(note.getId());
-        user.setNotesIdList(notesIdList);
-        user = userService.updateUser(user);
-        userService.setAuthenticatedUser(user);
+        userService.updateUserNotesIdList(notesIdList);
         return note;
     }
 
@@ -89,15 +86,13 @@ public class NoteService {
         return noteRepository.save(prevNote);
     }
 
+    // TODO add checking if all the notes are the same as were but reordered
     public List<String> updateUserNotesOrder(UpdateUserNotesOrderRequest userNotesOrderBody) {
         List<String> newNotesIdList = userNotesOrderBody.getNewNotesIdList();
         if (newNotesIdList == null || newNotesIdList.isEmpty()) {
             throw new IllegalArgumentException("The newNotesIdList attr mustn't be null or empty");
         }
-        User user = userService.getAuthenticatedUser();
-        user.setNotesIdList(newNotesIdList);
-        user = userService.updateUser(user);
-        return user.getNotesIdList();
+        return userService.updateUserNotesIdList(newNotesIdList);
     }
 
     private boolean noteIsEmpty(String title, String description) {
