@@ -65,10 +65,16 @@ public class NoteService {
         if (id == null) {
             throw new IllegalArgumentException("The id mustn't be null");
         }
+        User user = userService.getAuthenticatedUser();
+        List<String> notesIdList = user.getNotesIdList();
+        if (!notesIdList.remove(id)) {
+            throw new IllegalArgumentException("Note with id " + id + " not found");
+        }
+        userService.updateUserNotesIdList(notesIdList);
         noteRepository.deleteById(id);
-        // TODO remove indexes of notes from user obj when note deletes
-        // TODO connect deleteNote method with user
     }
+
+    // TODO create method deleteNotes
 
     public Note updateNote(NoteRequest noteRequest) throws IllegalArgumentException {
         if (noteRequest.getId() == null) {
@@ -78,12 +84,12 @@ public class NoteService {
             throw new IllegalArgumentException("Title or body mustn't be empty");
         }
 
-        Note prevNote = getNote(noteRequest.getId());
+        Note note = getNote(noteRequest.getId());
 
-        prevNote.setTitle(noteRequest.getTitle());
-        prevNote.setDescription(noteRequest.getDescription());
-        prevNote.setExpirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()));
-        return noteRepository.save(prevNote);
+        note.setTitle(noteRequest.getTitle());
+        note.setDescription(noteRequest.getDescription());
+        note.setExpirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()));
+        return noteRepository.save(note);
     }
 
     // TODO add checking if all the notes are the same as were but reordered
