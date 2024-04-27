@@ -50,10 +50,8 @@ public class NoteService {
         Note note = Note.builder()
                             .title(noteRequest.getTitle())
                             .description(noteRequest.getDescription())
+                            .expirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()))
                         .build();
-        if (noteRequest.getExpirationDate() != null) {
-            note.setExpirationDate(LocalDate.parse(noteRequest.getExpirationDate()));
-        }
         note = noteRepository.save(note);
         List<String> notesIdList = user.getNotesIdList();
         notesIdList.add(note.getId());
@@ -80,11 +78,15 @@ public class NoteService {
         if (noteRequest.getId() == null) {
             throw new IllegalArgumentException("The id attr mustn't be null");
         }
-        if (noteIsEmpty(noteRequest.getTitle(), noteRequest.getDescription())) {
-            throw new IllegalArgumentException("Title or body mustn't be empty");
-        }
-
+        checkNoteRequest(noteRequest);
         Note note = getNote(noteRequest.getId());
+        if (
+                note.getTitle().equals(noteRequest.getTitle()) &&
+                note.getDescription().equals(noteRequest.getDescription()) &&
+                Objects.equals(note.getExpirationDate(), getLocalDateOrNullFromString(noteRequest.getExpirationDate()))
+        ) {
+            throw new IllegalArgumentException("Provided the same title, description and expiration date as note has");
+        }
 
         note.setTitle(noteRequest.getTitle());
         note.setDescription(noteRequest.getDescription());
@@ -119,9 +121,9 @@ public class NoteService {
         }
     }
 
-    private LocalDate getLocalDateOrNullFromString(String date) {
-        if (date != null) {
-            return LocalDate.parse(date);
+    private LocalDate getLocalDateOrNullFromString(String dateString) {
+        if (dateString != null) {
+            return LocalDate.parse(dateString);
         } else {
             return null;
         }

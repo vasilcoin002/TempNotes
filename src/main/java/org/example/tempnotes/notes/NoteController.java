@@ -47,7 +47,17 @@ public class NoteController {
         }
     }
 
-    @CrossOrigin(origins = "*")
+    // TODO add annotations
+    public ResponseEntity<?> deleteNotes(@RequestParam String id) {
+        try {
+            // TODO replace body with updated user notes
+            return new ResponseEntity<>("", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+        @CrossOrigin(origins = "*")
     @PutMapping("updateNote")
     public ResponseEntity<?> updateNote(@RequestBody NoteRequest noteRequest) {
         try {
