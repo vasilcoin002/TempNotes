@@ -57,7 +57,7 @@ public class NoteController {
         }
     }
 
-        @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = "*")
     @PutMapping("updateNote")
     public ResponseEntity<?> updateNote(@RequestBody NoteRequest noteRequest) {
         try {

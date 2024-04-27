@@ -85,7 +85,7 @@ public class NoteService {
                 note.getDescription().equals(noteRequest.getDescription()) &&
                 Objects.equals(note.getExpirationDate(), getLocalDateOrNullFromString(noteRequest.getExpirationDate()))
         ) {
-            throw new IllegalArgumentException("Provided the same title, description and expiration date as note has");
+            throw new IllegalArgumentException("Provided the same title, description and expirationDate as note has");
         }
 
         note.setTitle(noteRequest.getTitle());
@@ -94,12 +94,16 @@ public class NoteService {
         return noteRepository.save(note);
     }
 
-    // TODO add checking if all the notes are the same as were but reordered
     public List<String> updateUserNotesOrder(UpdateUserNotesOrderRequest userNotesOrderBody) {
         List<String> newNotesIdList = userNotesOrderBody.getNewNotesIdList();
-        if (newNotesIdList == null || newNotesIdList.isEmpty()) {
+        if (newNotesIdList == null) {
             throw new IllegalArgumentException("The newNotesIdList attr mustn't be null or empty");
         }
+        // checking if all the previous notes are in list but reordered
+        User user = userService.getAuthenticatedUser();
+        List<String> notesIdList = user.getNotesIdList();
+        checkUpdateUserNotesOrder(notesIdList, newNotesIdList);
+
         return userService.updateUserNotesIdList(newNotesIdList);
     }
 
@@ -118,6 +122,19 @@ public class NoteService {
             throw new IllegalArgumentException(
                     "One of title or description mustn't be empty. Provide not empty title or description"
             );
+        }
+    }
+
+    private void checkUpdateUserNotesOrder(List<String> notesIdList, List<String> newNotesIdList) {
+        if (notesIdList.equals(newNotesIdList)) {
+            throw new IllegalArgumentException("Provided the same notesIdList as user has");
+        }
+        HashSet<String> notesIdSet = new HashSet<>(notesIdList);
+        HashSet<String> newNotesIdSet = new HashSet<>(newNotesIdList);
+        System.out.println(notesIdSet);
+        System.out.println(newNotesIdSet);
+        if (!notesIdSet.equals(newNotesIdSet)) {
+            throw new IllegalArgumentException("Not all the notes which user has are provided");
         }
     }
 
