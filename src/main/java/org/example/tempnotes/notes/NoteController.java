@@ -1,9 +1,8 @@
 package org.example.tempnotes.notes;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tempnotes.DTOs.DeleteUserNotesRequest;
-import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
 import org.example.tempnotes.DTOs.NoteRequest;
+import org.example.tempnotes.DTOs.UpdateUserNotesRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +49,7 @@ public class NoteController {
 
     @CrossOrigin(origins = "*")
     @DeleteMapping("deleteNotes")
-    public ResponseEntity<?> deleteNotes(@RequestBody DeleteUserNotesRequest request) {
+    public ResponseEntity<?> deleteNotes(@RequestBody UpdateUserNotesRequest request) {
         try {
             // TODO replace body with updated user notes
             return new ResponseEntity<>(noteService.deleteNotes(request), HttpStatus.OK);
@@ -71,10 +70,10 @@ public class NoteController {
 
     @CrossOrigin(origins = "*")
     @PutMapping("updateUserNotesOrder")
-    public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesOrderRequest userNotesOrderBody) {
+    public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesRequest userNotesOrderBody) {
         try {
-            List<String> res = noteService.updateUserNotesOrder(userNotesOrderBody);
-            return new ResponseEntity<>(res, HttpStatus.OK);
+            List<String> newNotesIdList = noteService.updateUserNotesOrder(userNotesOrderBody);
+            return new ResponseEntity<>(newNotesIdList, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

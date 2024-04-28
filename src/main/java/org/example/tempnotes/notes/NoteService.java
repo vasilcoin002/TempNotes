@@ -1,14 +1,10 @@
 package org.example.tempnotes.notes;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tempnotes.DTOs.DeleteUserNotesRequest;
 import org.example.tempnotes.DTOs.NoteRequest;
-import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
-import org.example.tempnotes.auth.AuthenticationService;
+import org.example.tempnotes.DTOs.UpdateUserNotesRequest;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserService;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -74,7 +70,7 @@ public class NoteService {
         noteRepository.deleteById(id);
     }
 
-    public List<String> deleteNotes(DeleteUserNotesRequest request) {
+    public List<String> deleteNotes(UpdateUserNotesRequest request) {
         if (request.getNotesIdList() == null) {
             throw new IllegalArgumentException("The notesIdList is not provided");
         }
@@ -115,8 +111,8 @@ public class NoteService {
         return noteRepository.save(note);
     }
 
-    public List<String> updateUserNotesOrder(UpdateUserNotesOrderRequest userNotesOrderBody) {
-        List<String> newNotesIdList = userNotesOrderBody.getNewNotesIdList();
+    public List<String> updateUserNotesOrder(UpdateUserNotesRequest userNotesOrderBody) {
+        List<String> newNotesIdList = userNotesOrderBody.getNotesIdList();
         if (newNotesIdList == null) {
             throw new IllegalArgumentException("The notesIdList is not provided");
         }
@@ -155,7 +151,9 @@ public class NoteService {
         System.out.println(notesIdSet);
         System.out.println(newNotesIdSet);
         if (!notesIdSet.equals(newNotesIdSet)) {
-            throw new IllegalArgumentException("Not all the notes which user has are provided");
+            throw new IllegalArgumentException(
+                    "In notesIdList provided not all the notes which user has or notes which user doesn't have"
+            );
         }
     }
 
@@ -168,6 +166,6 @@ public class NoteService {
     }
 
     private List<String> getNotesId(List<Note> notesList) {
-        return getUserNotes().stream().map(Note::getId).collect(Collectors.toList());
+        return notesList.stream().map(Note::getId).collect(Collectors.toList());
     }
 }
