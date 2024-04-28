@@ -1,6 +1,7 @@
 package org.example.tempnotes.notes;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tempnotes.DTOs.DeleteUserNotesRequest;
 import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
 import org.example.tempnotes.DTOs.NoteRequest;
 import org.springframework.http.HttpStatus;
@@ -47,11 +48,12 @@ public class NoteController {
         }
     }
 
-    // TODO add annotations
-    public ResponseEntity<?> deleteNotes(@RequestParam String id) {
+    @CrossOrigin(origins = "*")
+    @DeleteMapping("deleteNotes")
+    public ResponseEntity<?> deleteNotes(@RequestBody DeleteUserNotesRequest request) {
         try {
             // TODO replace body with updated user notes
-            return new ResponseEntity<>("", HttpStatus.OK);
+            return new ResponseEntity<>(noteService.deleteNotes(request), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

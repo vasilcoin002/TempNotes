@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-// TODO refactor it and DeleteUserNotesRequest to the one class ChangeUserNotesRequest
-public class UpdateUserNotesOrderRequest {
-    private List<String> newNotesIdList;
+// TODO refactor it and UpdateUserNotesOrder to the one class ChangeUserNotesRequest
+public class DeleteUserNotesRequest {
+    private List<String> notesIdList;
 }

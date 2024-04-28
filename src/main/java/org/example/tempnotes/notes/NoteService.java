@@ -1,6 +1,7 @@
 package org.example.tempnotes.notes;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tempnotes.DTOs.DeleteUserNotesRequest;
 import org.example.tempnotes.DTOs.NoteRequest;
 import org.example.tempnotes.DTOs.UpdateUserNotesOrderRequest;
 import org.example.tempnotes.auth.AuthenticationService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class NoteService {
     private final UserService userService;
 
     public Note getNote(String id) {
+        // TODO add checking if note belongs to user
         Optional<Note> optionalNote = noteRepository.findById(id);
         optionalNote.orElseThrow(() -> new NoSuchElementException("Note with id " + id + " not found"));
         return optionalNote.get();
@@ -61,22 +64,40 @@ public class NoteService {
 
     public void deleteNote(String id) {
         if (id == null) {
-            throw new IllegalArgumentException("The id mustn't be null");
+            throw new IllegalArgumentException("The id is not provided");
         }
-        User user = userService.getAuthenticatedUser();
-        List<String> notesIdList = user.getNotesIdList();
+        List<String> notesIdList = getNotesId(getUserNotes());
         if (!notesIdList.remove(id)) {
-            throw new IllegalArgumentException("Note with id " + id + " not found");
+            throw new IllegalArgumentException("User doesn't have the note with id " + id);
         }
         userService.updateUserNotesIdList(notesIdList);
         noteRepository.deleteById(id);
     }
 
-    // TODO create method deleteNotes
+    public List<String> deleteNotes(DeleteUserNotesRequest request) {
+        if (request.getNotesIdList() == null) {
+            throw new IllegalArgumentException("The notesIdList is not provided");
+        }
+        return deleteNotes(request.getNotesIdList());
+    }
+
+    public List<String> deleteNotes(List<String> deleteNotesIdList) {
+        if (deleteNotesIdList.isEmpty()) {
+            throw new IllegalArgumentException("The notesIdList mustn't be empty");
+        }
+        List<String> notesIdList = getNotesId(getUserNotes());
+        if (!new HashSet<>(notesIdList).containsAll(deleteNotesIdList)) {
+            throw new IllegalArgumentException("Provided id of notes which user doesn't have");
+        }
+        notesIdList.removeAll(deleteNotesIdList);
+        notesIdList = userService.updateUserNotesIdList(notesIdList);
+        noteRepository.deleteAllById(deleteNotesIdList);
+        return notesIdList;
+    }
 
     public Note updateNote(NoteRequest noteRequest) throws IllegalArgumentException {
         if (noteRequest.getId() == null) {
-            throw new IllegalArgumentException("The id attr mustn't be null");
+            throw new IllegalArgumentException("The id is not provided");
         }
         checkNoteRequest(noteRequest);
         Note note = getNote(noteRequest.getId());
@@ -97,7 +118,7 @@ public class NoteService {
     public List<String> updateUserNotesOrder(UpdateUserNotesOrderRequest userNotesOrderBody) {
         List<String> newNotesIdList = userNotesOrderBody.getNewNotesIdList();
         if (newNotesIdList == null) {
-            throw new IllegalArgumentException("The newNotesIdList attr mustn't be null or empty");
+            throw new IllegalArgumentException("The notesIdList is not provided");
         }
         // checking if all the previous notes are in list but reordered
         User user = userService.getAuthenticatedUser();
@@ -113,10 +134,10 @@ public class NoteService {
 
     private void checkNoteRequest(NoteRequest request) {
         if (request.getTitle() == null) {
-            throw new IllegalArgumentException("title is not provided(provide at least an empty string \"\")");
+            throw new IllegalArgumentException("Title is not provided(provide at least an empty string \"\")");
         }
         if (request.getDescription() == null) {
-            throw new IllegalArgumentException("description is not provided(provide at least an empty string \"\")");
+            throw new IllegalArgumentException("Description is not provided(provide at least an empty string \"\")");
         }
         if (noteIsEmpty(request.getTitle(), request.getDescription())) {
             throw new IllegalArgumentException(
@@ -144,5 +165,9 @@ public class NoteService {
         } else {
             return null;
         }
+    }
+
+    private List<String> getNotesId(List<Note> notesList) {
+        return getUserNotes().stream().map(Note::getId).collect(Collectors.toList());
     }
 }
