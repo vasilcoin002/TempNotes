@@ -18,7 +18,11 @@ public class NoteService {
     private final UserService userService;
 
     public Note getNote(String id) {
-        // TODO add checking if note belongs to user
+        User user = userService.getAuthenticatedUser();
+        List<String> notesIdList = user.getNotesIdList();
+        if (!notesIdList.contains(id)) {
+            throw new IllegalArgumentException("Provided id of note which user doesn't have");
+        }
         Optional<Note> optionalNote = noteRepository.findById(id);
         optionalNote.orElseThrow(() -> new NoSuchElementException("Note with id " + id + " not found"));
         return optionalNote.get();

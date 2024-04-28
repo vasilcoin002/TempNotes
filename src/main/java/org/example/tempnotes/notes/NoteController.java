@@ -51,7 +51,6 @@ public class NoteController {
     @DeleteMapping("deleteNotes")
     public ResponseEntity<?> deleteNotes(@RequestBody UpdateUserNotesRequest request) {
         try {
-            // TODO replace body with updated user notes
             return new ResponseEntity<>(noteService.deleteNotes(request), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
