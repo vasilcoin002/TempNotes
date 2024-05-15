@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tempnotes.token.Token;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.OneToMany;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,6 +32,9 @@ public class User implements UserDetails {
     private List<String> notesIdList;
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "user")
+    private List<Token> tokens;
 
     public User(String email, String password, List<String> notesIdList, Role role) {
         this.email = email;

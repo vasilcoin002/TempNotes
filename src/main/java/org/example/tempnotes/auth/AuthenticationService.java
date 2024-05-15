@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.UserRequest;
 import org.example.tempnotes.config.JwtService;
+import org.example.tempnotes.token.Token;
+import org.example.tempnotes.token.TokenPermission;
+import org.example.tempnotes.token.TokenRepository;
+import org.example.tempnotes.token.TokenType;
 import org.example.tempnotes.users.Role;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserRepository;
@@ -22,10 +26,25 @@ import java.util.ArrayList;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+
+    private Token saveUserToken(User user, TokenPermission tokenPermission) {
+        Token accessToken = Token.builder()
+                .user(user)
+                .token(jwtService.generateToken(user))
+                .tokenType(TokenType.BEARER)
+                .tokenPermission(tokenPermission)
+                .isRevoked(false)
+                .isExpired(false)
+                .build();
+        tokenRepository.save(accessToken);
+        return accessToken;
+    }
 
     public AuthenticationResponse register(@NonNull UserRequest request) {
         checkUserRequest(request);
@@ -40,8 +59,8 @@ public class AuthenticationService {
                         .role(Role.USER)
                         .build()
         );
-        String token = jwtService.generateToken(user);
-        return new AuthenticationResponse(token);
+        Token accessToken = saveUserToken(user, TokenPermission.ACCESS);
+        return new AuthenticationResponse(accessToken.getToken());
     }
 
     public AuthenticationResponse authenticate(@NonNull UserRequest request) {
@@ -57,9 +76,9 @@ public class AuthenticationService {
                 .findByEmail(request.getEmail()).orElseThrow(
                         () -> new UsernameNotFoundException("user " + request.getEmail() + " not found")
                 );
-        String token = jwtService.generateToken(user);
+        Token accessToken = saveUserToken(user, TokenPermission.ACCESS);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new AuthenticationResponse(token);
+        return new AuthenticationResponse(accessToken.getToken());
     }
 
     private void checkUserRequest(UserRequest request) {
