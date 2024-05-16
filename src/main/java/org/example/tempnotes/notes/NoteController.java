@@ -16,7 +16,6 @@ public class NoteController {
 
     private final NoteService noteService;
 
-//    @CrossOrigin(origins = "*")
     @GetMapping("getNotes")
     public ResponseEntity<?> getUserNotes() {
         try {
@@ -26,7 +25,6 @@ public class NoteController {
         }
     }
 
-//    @CrossOrigin(origins = "*")
     @PostMapping("addNote")
     public ResponseEntity<?> addNote(@RequestBody NoteRequest noteRequest) {
         try {
@@ -36,7 +34,6 @@ public class NoteController {
         }
     }
 
-//    @CrossOrigin(origins = "*")
     @DeleteMapping("deleteNote")
     public ResponseEntity<?> deleteNote(@RequestParam String id) {
         try {
@@ -47,7 +44,6 @@ public class NoteController {
         }
     }
 
-//    @CrossOrigin(origins = "*")
     @DeleteMapping("deleteNotes")
     public ResponseEntity<?> deleteNotes(@RequestBody UpdateUserNotesRequest request) {
         try {
@@ -57,7 +53,6 @@ public class NoteController {
         }
     }
 
-//    @CrossOrigin(origins = "*")
     @PutMapping("updateNote")
     public ResponseEntity<?> updateNote(@RequestBody NoteRequest noteRequest) {
         try {
@@ -67,7 +62,6 @@ public class NoteController {
         }
     }
 
-//    @CrossOrigin(origins = "*")
     @PutMapping("updateUserNotesOrder")
     public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesRequest userNotesOrderBody) {
         try {

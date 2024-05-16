@@ -12,18 +12,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-//    @CrossOrigin(origins = "*")
-    @PostMapping
-    public ResponseEntity<?> addUser(@RequestBody UserRequest request) {
-        try {
-            userService.addUser(request);
-            return new ResponseEntity<>("user " + request.getEmail() + " has been added", HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
-    }
-
-//    @CrossOrigin(origins = "*")
     @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody UserRequest userBody) {
         try {

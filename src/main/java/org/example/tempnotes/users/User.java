@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.tempnotes.token.Token;
+import org.example.tempnotes.users.devices.Device;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -34,14 +35,10 @@ public class User implements UserDetails {
     private Role role;
 
     @OneToMany(mappedBy = "user")
-    private List<Token> tokens;
+    private List<Device> devices;
 
-    public User(String email, String password, List<String> notesIdList, Role role) {
-        this.email = email;
-        this.password = password;
-        this.notesIdList = notesIdList;
-        this.role = role;
-    }
+    @OneToMany(mappedBy = "user")
+    private List<Token> tokens;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

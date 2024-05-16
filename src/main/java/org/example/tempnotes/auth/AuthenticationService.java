@@ -1,5 +1,6 @@
 package org.example.tempnotes.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.UserRequest;
@@ -11,6 +12,8 @@ import org.example.tempnotes.token.TokenType;
 import org.example.tempnotes.users.Role;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserRepository;
+import org.example.tempnotes.users.devices.Device;
+import org.example.tempnotes.users.devices.DeviceStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +37,13 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
-    private Token saveUserToken(User user, TokenPermission tokenPermission) {
+    private Token saveUserToken(User user, TokenPermission tokenPermission, Device device) {
         Token accessToken = Token.builder()
                 .user(user)
                 .token(jwtService.generateToken(user))
                 .tokenType(TokenType.BEARER)
                 .tokenPermission(tokenPermission)
+                .device(device)
                 .isRevoked(false)
                 .isExpired(false)
                 .build();
@@ -46,25 +51,43 @@ public class AuthenticationService {
         return accessToken;
     }
 
-    public AuthenticationResponse register(@NonNull UserRequest request) {
+    public AuthenticationResponse register(
+            @NonNull HttpServletRequest httpServletRequest,
+            @NonNull UserRequest request
+    ) {
         checkUserRequest(request);
+        checkHttpServletRequest(httpServletRequest);
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("user \"" + request.getEmail() + "\" already exists");
         }
+
+        String deviceName = httpServletRequest.getHeader("User-Agent");
+        List<Device> userDevices = new ArrayList<>();
+        userDevices.add(Device.builder()
+                .name(deviceName)
+                .status(DeviceStatus.ACCEPTED)
+                .build()
+        );
         User user = userRepository.save(
                 User.builder()
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
                         .notesIdList(new ArrayList<>())
+                        .devices(userDevices)
                         .role(Role.USER)
                         .build()
         );
-        Token accessToken = saveUserToken(user, TokenPermission.ACCESS);
+        Token accessToken = saveUserToken(user, TokenPermission.ACCESS, user.getDevices().get(0));
         return new AuthenticationResponse(accessToken.getToken());
     }
 
-    public AuthenticationResponse authenticate(@NonNull UserRequest request) {
+    // TODO implement authentication through the device
+    public AuthenticationResponse authenticate(
+            @NonNull HttpServletRequest httpServletRequest,
+            @NonNull UserRequest request
+    ) {
         checkUserRequest(request);
+        checkHttpServletRequest(httpServletRequest);
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -76,7 +99,8 @@ public class AuthenticationService {
                 .findByEmail(request.getEmail()).orElseThrow(
                         () -> new UsernameNotFoundException("user " + request.getEmail() + " not found")
                 );
-        Token accessToken = saveUserToken(user, TokenPermission.ACCESS);
+        // TODO change the argument where fn takes device when I'll be implementing auth through device
+        Token accessToken = saveUserToken(user, TokenPermission.ACCESS, user.getDevices().get(0));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return new AuthenticationResponse(accessToken.getToken());
     }
@@ -87,6 +111,13 @@ public class AuthenticationService {
         }
         if (request.getPassword() == null) {
             throw new IllegalArgumentException("password is not provided");
+        }
+    }
+
+    private void checkHttpServletRequest(HttpServletRequest request) {
+        String deviceName = request.getHeader("User-Agent");
+        if (deviceName == null) {
+            throw new IllegalArgumentException("User-Agent must be in headers");
         }
     }
 

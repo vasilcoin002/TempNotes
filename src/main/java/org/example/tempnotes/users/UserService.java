@@ -24,9 +24,6 @@ public class UserService {
     public void setAuthenticatedUser(User user) {
         authenticationService.setAuthenticatedUser(user);
     }
-    public void addUser(UserRequest request) {
-        authenticationService.register(request);
-    }
 
     public AuthenticationResponse updateUser(UserRequest request) {
         User user = getAuthenticatedUser();
