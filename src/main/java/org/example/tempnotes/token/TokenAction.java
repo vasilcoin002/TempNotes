@@ -1,6 +1,6 @@
 package org.example.tempnotes.token;
 
-public enum TokenPermission {
+public enum TokenAction {
     ACCESS,
     REFRESH
 }

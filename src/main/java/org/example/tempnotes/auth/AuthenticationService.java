@@ -6,7 +6,7 @@ import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.UserRequest;
 import org.example.tempnotes.config.JwtService;
 import org.example.tempnotes.token.Token;
-import org.example.tempnotes.token.TokenPermission;
+import org.example.tempnotes.token.TokenAction;
 import org.example.tempnotes.token.TokenRepository;
 import org.example.tempnotes.token.TokenType;
 import org.example.tempnotes.users.Role;
@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,15 +39,13 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
-    private Token saveUserToken(User user, TokenPermission tokenPermission, Device device) {
+    private Token saveUserToken(User user, TokenAction tokenAction, Device device) {
         Token accessToken = Token.builder()
                 .user(user)
                 .token(jwtService.generateToken(user))
                 .tokenType(TokenType.BEARER)
-                .tokenPermission(tokenPermission)
+                .tokenAction(tokenAction)
                 .device(device)
-                .isRevoked(false)
-                .isExpired(false)
                 .build();
         tokenRepository.save(accessToken);
         return accessToken;
@@ -77,11 +77,11 @@ public class AuthenticationService {
                         .role(Role.USER)
                         .build()
         );
-        Token accessToken = saveUserToken(user, TokenPermission.ACCESS, user.getDevices().get(0));
+        Token accessToken = saveUserToken(user, TokenAction.ACCESS, user.getDevices().get(0));
         return new AuthenticationResponse(accessToken.getToken());
     }
 
-    // TODO implement authentication through the device
+    // TODO create the accept device method
     public AuthenticationResponse authenticate(
             @NonNull HttpServletRequest httpServletRequest,
             @NonNull UserRequest request
@@ -95,14 +95,43 @@ public class AuthenticationService {
                         request.getPassword()
                 )
         );
+
         User user = userRepository
                 .findByEmail(request.getEmail()).orElseThrow(
                         () -> new UsernameNotFoundException("user " + request.getEmail() + " not found")
                 );
-        // TODO change the argument where fn takes device when I'll be implementing auth through device
-        Token accessToken = saveUserToken(user, TokenPermission.ACCESS, user.getDevices().get(0));
+        List<Device> userDevices = user.getDevices();
+        String deviceName = httpServletRequest.getHeader("User-Agent");
+        Device userDevice = getUserDeviceByName(user, deviceName);;
+        if (!getDevicesNames(userDevices).contains(deviceName)) {
+            userDevice = Device.builder().name(deviceName).status(DeviceStatus.NOT_ACCEPTED).build();
+            userDevices.add(userDevice);
+            user.setDevices(userDevices);
+            user = userRepository.save(user);
+            setAuthenticatedUser(user);
+        } else {
+            tokenRepository.deleteAllByDevice(userDevice);
+        }
+        Token accessToken = saveUserToken(user, TokenAction.ACCESS, userDevice);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return new AuthenticationResponse(accessToken.getToken());
+    }
+
+    private Device getUserDeviceByName(User user, String deviceName) {
+        List<Device> userDevices = user.getDevices();
+        return userDevices.stream()
+                .filter(
+                        device -> Objects.equals(
+                                deviceName,
+                                device.getName()
+                        )
+                )
+                .findFirst()
+                .orElse(null);
+    }
+
+    private List<String> getDevicesNames(List<Device> devices) {
+        return devices.stream().map(Device::getName).collect(Collectors.toList());
     }
 
     private void checkUserRequest(UserRequest request) {

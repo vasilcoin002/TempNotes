@@ -18,15 +18,14 @@ public class Token {
     @Id
     private String id;
     private String token;
-    @ManyToOne
-    private Device device;
+
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
     @Enumerated(EnumType.STRING)
-    private TokenPermission tokenPermission;
-    private boolean isExpired;
-    private boolean isRevoked;
+    private TokenAction tokenAction;
 
+    @ManyToOne
+    private Device device;
     @ManyToOne
     private User user;
 }
