@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 import java.util.Collection;
 import java.util.List;
 

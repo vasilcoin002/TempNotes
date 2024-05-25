@@ -25,6 +25,7 @@ public class UserService {
         authenticationService.setAuthenticatedUser(user);
     }
 
+    // FIXME update user also in all token's
     public AuthenticationResponse updateUser(UserRequest request) {
         User user = getAuthenticatedUser();
         checkUpdateUserRequest(request, user);
