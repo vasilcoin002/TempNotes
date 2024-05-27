@@ -1,6 +1,7 @@
 package org.example.tempnotes.config;
 
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -28,7 +29,7 @@ public class DeviceFilter extends OncePerRequestFilter {
         // TODO replace "" on refreshToken
         String refreshTokenHeader = "";
 
-        if (tokensAreProvided(accessTokenHeader, refreshTokenHeader)) {
+        if (authorizationTokensAreProvided(accessTokenHeader, refreshTokenHeader)) {
             accessTokenHeader = accessTokenHeader.substring(7);
             System.out.println(accessTokenHeader);
             deviceService.checkTokenBelongsDevice(accessTokenHeader, deviceName);
@@ -39,7 +40,7 @@ public class DeviceFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean tokensAreProvided(String accessToken, String refreshToken) {
+    private boolean authorizationTokensAreProvided(String accessToken, String refreshToken) {
         return accessToken != null && refreshToken != null;
     }
 }

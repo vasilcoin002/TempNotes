@@ -4,12 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.token.Token;
-import org.example.tempnotes.token.TokenRepository;
-import org.example.tempnotes.users.User;
-import org.example.tempnotes.users.devices.Device;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -27,8 +23,7 @@ public class DeviceService {
     }
 
     public void checkTokenBelongsDevice(@NonNull String token, @NonNull String deviceName) {
-        Token tokenObj = tokenService.getToken(token);
-        if (!tokenBelongsDevice(tokenObj, deviceName)) {
+        if (!tokenBelongsDevice(token, deviceName)) {
             throw new IllegalArgumentException("Token doesn't belong to this device");
         }
     }
