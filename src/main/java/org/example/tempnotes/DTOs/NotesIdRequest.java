@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserNotesRequest {
-    private List<String> notesIdList;
+public class NotesIdRequest {
+    private List<Long> notesIdList;
 }

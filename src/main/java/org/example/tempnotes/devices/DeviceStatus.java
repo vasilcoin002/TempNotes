@@ -1,4 +1,4 @@
-package org.example.tempnotes.users.devices;
+package org.example.tempnotes.devices;
 
 public enum DeviceStatus {
     NOT_ACCEPTED,

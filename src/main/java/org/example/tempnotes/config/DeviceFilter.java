@@ -31,7 +31,6 @@ public class DeviceFilter extends OncePerRequestFilter {
 
         if (authorizationTokensAreProvided(accessTokenHeader, refreshTokenHeader)) {
             accessTokenHeader = accessTokenHeader.substring(7);
-            System.out.println(accessTokenHeader);
             deviceService.checkTokenBelongsDevice(accessTokenHeader, deviceName);
             // TODO uncomment when refresh token will be ready
 //            refreshTokenHeader = refreshTokenHeader.substring(7);

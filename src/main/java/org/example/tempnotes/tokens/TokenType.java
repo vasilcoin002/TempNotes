@@ -1,4 +1,4 @@
-package org.example.tempnotes.token;
+package org.example.tempnotes.tokens;
 
 public enum TokenType {
     BEARER

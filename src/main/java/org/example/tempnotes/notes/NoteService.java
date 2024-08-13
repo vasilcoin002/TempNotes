@@ -1,175 +1,138 @@
 package org.example.tempnotes.notes;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.NoteRequest;
-import org.example.tempnotes.DTOs.UpdateUserNotesRequest;
+import org.example.tempnotes.DTOs.NotesIdRequest;
+import org.example.tempnotes.auth.AuthenticationService;
+import org.example.tempnotes.notes.models.ActiveNote;
+import org.example.tempnotes.notes.repositories.ActiveNoteRepository;
+import org.example.tempnotes.notes.repositories.ArchivedNoteRepository;
 import org.example.tempnotes.users.User;
-import org.example.tempnotes.users.UserService;
+import org.example.tempnotes.users.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class NoteService {
-    private final NoteRepository noteRepository;
-    private final UserService userService;
 
-    public Note getNote(String id) {
-        User user = userService.getAuthenticatedUser();
-        List<String> notesIdList = user.getNotesIdList();
-        if (!notesIdList.contains(id)) {
-            throw new IllegalArgumentException("Provided id of note which user doesn't have");
-        }
-        Optional<Note> optionalNote = noteRepository.findById(id);
-        optionalNote.orElseThrow(() -> new NoSuchElementException("Note with id " + id + " not found"));
-        return optionalNote.get();
+    private final AuthenticationService authenticationService;
+    private final ActiveNoteRepository activeNoteRepository;
+    private final ArchivedNoteRepository archivedNoteRepository;
+    private final UserRepository userRepository;
+
+    public ActiveNote getActiveNote(Long id) {
+        return activeNoteRepository.findById(id).orElseThrow(
+                () -> new NoSuchElementException("Note with id " + id + " not found")
+        );
     }
 
-    public List<Note> getUserNotes() {
-        User user = userService.getAuthenticatedUser();
-        List<String> notesIdList = user.getNotesIdList();
-        if (notesIdList.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<Note> unsortedNotesList = noteRepository.findAllById(notesIdList);
-        List<Note> sortedNotesList = new ArrayList<>();
-        for (int i = 0; i < unsortedNotesList.size(); i++) {
-            int finalI = i;
-            sortedNotesList.add(
-                unsortedNotesList.stream().filter(note -> Objects.equals(
-                    note.getId(),
-                    notesIdList.get(finalI))
-                ).findFirst().orElse(null));
-        }
-        return sortedNotesList;
+    public List<ActiveNote> getActiveUserNotes() {
+        return authenticationService.getAuthenticatedUser().getActiveNotes();
     }
 
-    public Note addNote(NoteRequest noteRequest) {
-        checkNoteRequest(noteRequest);
-        User user = userService.getAuthenticatedUser();
-        Note note = Note.builder()
-                            .title(noteRequest.getTitle())
-                            .description(noteRequest.getDescription())
-                            .expirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()))
-                        .build();
-        note = noteRepository.save(note);
-        List<String> notesIdList = user.getNotesIdList();
-        notesIdList.add(note.getId());
-        userService.updateUserNotesIdList(notesIdList);
-        return note;
+    @Transactional
+    public void addActiveNote(NoteRequest request) {
+        User user = authenticationService.getAuthenticatedUser();
+        // TODO validate request (at least title or description must be filled)
+        ActiveNote note = activeNoteRepository.save(
+                ActiveNote
+                    .builder()
+                        .title(request.getTitle())
+                        .description(request.getDescription())
+                        .expirationDate(request.getExpirationDate())
+                        .user(user)
+                    .build()
+        );
+        user.getActiveNotes().add(0, note);
+        userRepository.save(user);
     }
 
-    public void deleteNote(String id) {
-        if (id == null) {
-            throw new IllegalArgumentException("The id is not provided");
+    @Transactional
+    public void updateActiveNote(NoteRequest request) {
+        ActiveNote note = getActiveNote(request.getId());
+        if (!isUserHasActiveNote(request.getId())) {
+            throw new RuntimeException("You don't have permissions to update this note");
         }
-        List<String> notesIdList = getNotesId(getUserNotes());
-        if (!notesIdList.remove(id)) {
-            throw new IllegalArgumentException("User doesn't have the note with id " + id);
-        }
-        userService.updateUserNotesIdList(notesIdList);
-        noteRepository.deleteById(id);
+
+        // TODO validate request (at least title or description must be filled)
+        note.setTitle(request.getTitle());
+        note.setDescription(request.getDescription());
+        note.setExpirationDate(request.getExpirationDate());
+        activeNoteRepository.save(note);
     }
 
-    public List<String> deleteNotes(UpdateUserNotesRequest request) {
-        if (request.getNotesIdList() == null) {
-            throw new IllegalArgumentException("The notesIdList is not provided");
+    @Transactional
+    public void updateActiveNotesOrder(NotesIdRequest request) {
+        if (!isUserHasSameActiveNotes(request.getNotesIdList())) {
+            throw new RuntimeException("Provide the notesIdList with same notes but reordered");
         }
-        return deleteNotes(request.getNotesIdList());
+        // creating noteHashMap to make it easy replacing notes in activeNotes
+        HashMap<Long, ActiveNote> noteHashMap = new HashMap<>();
+        User user = authenticationService.getAuthenticatedUser();
+        // filling noteHashMap
+        user.getActiveNotes().forEach(
+                note -> noteHashMap.put(note.getId(), note)
+        );
+
+        user.getActiveNotes().clear();
+        // adding notes to activeNotes in correct order
+        request.getNotesIdList().forEach(
+                id -> user.getActiveNotes().add(noteHashMap.get(id))
+        );
+        userRepository.save(user);
     }
 
-    public List<String> deleteNotes(List<String> deleteNotesIdList) {
-        if (deleteNotesIdList.isEmpty()) {
-            throw new IllegalArgumentException("The notesIdList mustn't be empty");
+    @Transactional
+    public void deleteActiveNote(Long id) {
+        User user = authenticationService.getAuthenticatedUser();
+        if (!user.getActiveNotes().removeIf(note -> Objects.equals(note.getId(), id))) {
+            throw new RuntimeException("You don't have permissions to delete this note");
         }
-        List<String> notesIdList = getNotesId(getUserNotes());
-        if (!new HashSet<>(notesIdList).containsAll(deleteNotesIdList)) {
-            throw new IllegalArgumentException("Provided id of notes which user doesn't have");
-        }
-        notesIdList.removeAll(deleteNotesIdList);
-        notesIdList = userService.updateUserNotesIdList(notesIdList);
-        noteRepository.deleteAllById(deleteNotesIdList);
-        return notesIdList;
+        userRepository.save(user);
     }
 
-    public Note updateNote(NoteRequest noteRequest) throws IllegalArgumentException {
-        if (noteRequest.getId() == null) {
-            throw new IllegalArgumentException("The id is not provided");
-        }
-        checkNoteRequest(noteRequest);
-        Note note = getNote(noteRequest.getId());
-        if (
-                note.getTitle().equals(noteRequest.getTitle()) &&
-                note.getDescription().equals(noteRequest.getDescription()) &&
-                Objects.equals(note.getExpirationDate(), getLocalDateOrNullFromString(noteRequest.getExpirationDate()))
-        ) {
-            throw new IllegalArgumentException("Provided the same title, description and expirationDate as note has");
+    @Transactional
+    public void deleteActiveNotes(NotesIdRequest request) {
+        User user = authenticationService.getAuthenticatedUser();
+        // usage of HashSet for better performance
+        HashSet<Long> notesIdSet = new HashSet<>();
+        user.getActiveNotes().forEach(note -> notesIdSet.add(note.getId()));
+        if (!notesIdSet.containsAll(request.getNotesIdList())) {
+            throw new RuntimeException("Provide only id of notes which you actually have");
         }
 
-        note.setTitle(noteRequest.getTitle());
-        note.setDescription(noteRequest.getDescription());
-        note.setExpirationDate(getLocalDateOrNullFromString(noteRequest.getExpirationDate()));
-        return noteRepository.save(note);
+        // deleting requested notes from activeNotes
+        List<ActiveNote> activeNotes = user.getActiveNotes().stream()
+                .filter(note -> !request.getNotesIdList().contains(note.getId())).collect(Collectors.toList());
+        user.setActiveNotes(activeNotes);
+        userRepository.save(user);
     }
 
-    public List<String> updateUserNotesOrder(UpdateUserNotesRequest userNotesOrderBody) {
-        List<String> newNotesIdList = userNotesOrderBody.getNotesIdList();
-        if (newNotesIdList == null) {
-            throw new IllegalArgumentException("The notesIdList is not provided");
-        }
-        // checking if all the previous notes are in list but reordered
-        User user = userService.getAuthenticatedUser();
-        List<String> notesIdList = user.getNotesIdList();
-        checkUpdateUserNotesOrder(notesIdList, newNotesIdList);
-
-        return userService.updateUserNotesIdList(newNotesIdList);
+    private boolean isUserHasSameActiveNotes(List<Long> notesIdList) {
+        User user = authenticationService.getAuthenticatedUser();
+        HashSet<Long> persistentNotesIdSet = new HashSet<>(
+                // getting list of persistent notes id
+                user.getActiveNotes().stream().map(note -> note.getId()).toList()
+        );
+        HashSet<Long> notesIdSet = new HashSet<>(notesIdList);
+        return persistentNotesIdSet.equals(notesIdSet);
     }
 
-    private boolean noteIsEmpty(String title, String description) {
-        return title.isEmpty() && description.isEmpty();
+    private boolean isUserHasActiveNote(Long id) {
+        User user = authenticationService.getAuthenticatedUser();
+        return user.getActiveNotes().stream()
+                .map(ActiveNote::getId)
+                .toList()
+                .contains(id);
     }
 
-    private void checkNoteRequest(NoteRequest request) {
-        if (request.getTitle() == null) {
-            throw new IllegalArgumentException("Title is not provided(provide at least an empty string \"\")");
-        }
-        if (request.getDescription() == null) {
-            throw new IllegalArgumentException("Description is not provided(provide at least an empty string \"\")");
-        }
-        if (noteIsEmpty(request.getTitle(), request.getDescription())) {
-            throw new IllegalArgumentException(
-                    "One of title or description mustn't be empty. Provide not empty title or description"
-            );
-        }
-    }
 
-    private void checkUpdateUserNotesOrder(List<String> notesIdList, List<String> newNotesIdList) {
-        if (notesIdList.equals(newNotesIdList)) {
-            throw new IllegalArgumentException("Provided the same notesIdList as user has");
-        }
-        HashSet<String> notesIdSet = new HashSet<>(notesIdList);
-        HashSet<String> newNotesIdSet = new HashSet<>(newNotesIdList);
-        System.out.println(notesIdSet);
-        System.out.println(newNotesIdSet);
-        if (!notesIdSet.equals(newNotesIdSet)) {
-            throw new IllegalArgumentException(
-                    "In notesIdList provided not all the notes which user has or notes which user doesn't have"
-            );
-        }
-    }
-
-    private LocalDate getLocalDateOrNullFromString(String dateString) {
-        if (dateString != null) {
-            return LocalDate.parse(dateString);
-        } else {
-            return null;
-        }
-    }
-
-    private List<String> getNotesId(List<Note> notesList) {
-        return notesList.stream().map(Note::getId).collect(Collectors.toList());
-    }
+//    private LocalDate getLocalDateOrNullFromString(String dateString) {
+//        if (dateString == null) {return null;}
+//        return LocalDate.parse(dateString);
+//    }
 }

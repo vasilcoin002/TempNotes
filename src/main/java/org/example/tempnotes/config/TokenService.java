@@ -1,8 +1,8 @@
 package org.example.tempnotes.config;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tempnotes.token.Token;
-import org.example.tempnotes.token.TokenRepository;
+import org.example.tempnotes.tokens.Token;
+import org.example.tempnotes.tokens.TokenRepository;
 import org.springframework.stereotype.Service;
 
 @Service

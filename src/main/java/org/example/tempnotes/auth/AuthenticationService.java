@@ -1,19 +1,21 @@
 package org.example.tempnotes.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.AuthenticationResponse;
 import org.example.tempnotes.DTOs.UserRequest;
 import org.example.tempnotes.config.JwtService;
-import org.example.tempnotes.token.Token;
-import org.example.tempnotes.token.TokenAction;
-import org.example.tempnotes.token.TokenRepository;
-import org.example.tempnotes.token.TokenType;
+import org.example.tempnotes.devices.Device;
+import org.example.tempnotes.devices.DeviceRepository;
+import org.example.tempnotes.devices.DeviceStatus;
+import org.example.tempnotes.tokens.Token;
+import org.example.tempnotes.tokens.TokenAction;
+import org.example.tempnotes.tokens.TokenRepository;
+import org.example.tempnotes.tokens.TokenType;
 import org.example.tempnotes.users.Role;
 import org.example.tempnotes.users.User;
 import org.example.tempnotes.users.UserRepository;
-import org.example.tempnotes.users.devices.Device;
-import org.example.tempnotes.users.devices.DeviceStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +40,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final DeviceRepository deviceRepository;
 
     private Token saveUserToken(User user, TokenAction tokenAction, Device device) {
         Token accessToken = Token.builder()
@@ -51,37 +54,40 @@ public class AuthenticationService {
         return accessToken;
     }
 
+    @Transactional
     public AuthenticationResponse register(
             @NonNull HttpServletRequest httpServletRequest,
             @NonNull UserRequest request
     ) {
-        checkUserRequest(request);
-        checkHttpServletRequest(httpServletRequest);
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("user \"" + request.getEmail() + "\" already exists");
-        }
-
         String deviceName = httpServletRequest.getHeader("User-Agent");
-        List<Device> userDevices = new ArrayList<>();
-        userDevices.add(Device.builder()
-                .name(deviceName)
-                .status(DeviceStatus.ACCEPTED)
-                .build()
-        );
         User user = userRepository.save(
                 User.builder()
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
-                        .notesIdList(new ArrayList<>())
-                        .devices(userDevices)
                         .role(Role.USER)
-                        .build()
+                    .build()
         );
-        Token accessToken = saveUserToken(user, TokenAction.ACCESS, user.getDevices().get(0));
+        Device device = deviceRepository.save(
+                Device.builder()
+                        .name(deviceName)
+                        .status(DeviceStatus.ACCEPTED)
+                        .user(user)
+                    .build()
+        );
+        Token accessToken = tokenRepository.save(
+                Token.builder()
+                        .user(user)
+                        .token(jwtService.generateToken(user))
+                        .tokenType(TokenType.BEARER)
+                        .tokenAction(TokenAction.ACCESS)
+                        .device(device)
+                    .build()
+        );
         return new AuthenticationResponse(accessToken.getToken());
     }
 
     // TODO create the accept device method
+    @Transactional
     public AuthenticationResponse authenticate(
             @NonNull HttpServletRequest httpServletRequest,
             @NonNull UserRequest request
@@ -96,28 +102,42 @@ public class AuthenticationService {
                 )
         );
 
-        User user = userRepository
-                .findByEmail(request.getEmail()).orElseThrow(
+        User user = userRepository.findByEmail(
+                request.getEmail()).orElseThrow(
                         () -> new UsernameNotFoundException("user " + request.getEmail() + " not found")
                 );
         List<Device> userDevices = user.getDevices();
         String deviceName = httpServletRequest.getHeader("User-Agent");
-        Device userDevice = getUserDeviceByName(user, deviceName);;
+        Device userDevice = getUserDeviceByName(user, deviceName);
         if (!getDevicesNames(userDevices).contains(deviceName)) {
-            userDevice = Device.builder().name(deviceName).status(DeviceStatus.NOT_ACCEPTED).build();
+            userDevice = deviceRepository.save(
+                    Device.builder()
+                                .name(deviceName)
+                                .status(DeviceStatus.NOT_ACCEPTED)
+                                .user(user)
+                            .build()
+            );
             userDevices.add(userDevice);
-            user.setDevices(userDevices);
-            user = userRepository.save(user);
             setAuthenticatedUser(user);
+            System.out.println(3);
         } else {
             tokenRepository.deleteAllByDevice(userDevice);
         }
-        Token accessToken = saveUserToken(user, TokenAction.ACCESS, userDevice);
+        Token accessToken = tokenRepository.save(
+                Token.builder()
+                            .user(user)
+                            .token(jwtService.generateToken(user))
+                            .tokenType(TokenType.BEARER)
+                            .tokenAction(TokenAction.ACCESS)
+                            .device(userDevice)
+                        .build()
+        );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return new AuthenticationResponse(accessToken.getToken());
+
     }
 
-    private Device getUserDeviceByName(User user, String deviceName) {
+    public Device getUserDeviceByName(User user, String deviceName) {
         List<Device> userDevices = user.getDevices();
         return userDevices.stream()
                 .filter(
@@ -136,10 +156,10 @@ public class AuthenticationService {
 
     private void checkUserRequest(UserRequest request) {
         if (request.getEmail() == null) {
-            throw new IllegalArgumentException("email is not provided");
+            throw new IllegalArgumentException("Email is not provided");
         }
         if (request.getPassword() == null) {
-            throw new IllegalArgumentException("password is not provided");
+            throw new IllegalArgumentException("Password is not provided");
         }
     }
 
@@ -154,17 +174,18 @@ public class AuthenticationService {
         return jwtService.generateToken(userDetails);
     }
 
+    @Transactional
     public User getAuthenticatedUser() {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    @Transactional
     public void setAuthenticatedUser(User user) {
         if (
                 user.getId() != null &&
                         user.getEmail() != null &&
                         user.getPassword() != null &&
-                        user.getRole() != null &&
-                        user.getNotesIdList() != null
+                        user.getRole() != null
         ) {
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(

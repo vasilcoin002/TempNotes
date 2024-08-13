@@ -1,22 +1,19 @@
 package org.example.tempnotes.users;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.tempnotes.token.Token;
-import org.example.tempnotes.users.devices.Device;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.example.tempnotes.devices.Device;
+import org.example.tempnotes.tokens.Token;
+import org.example.tempnotes.notes.models.ActiveNote;
+import org.example.tempnotes.notes.models.ArchivedNote;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.OneToMany;
-import javax.persistence.Transient;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,22 +21,39 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "users")
+@Entity(name = "_user")
+@Table(name = "_users")
 public class User implements UserDetails {
     @Id
-    private String id;
-    @Indexed(unique = true)
+    @GeneratedValue
+    private Long id;
+    @Column(unique = true, nullable = false)
     private String email;
+    @Column(nullable = false)
     private String password;
-    private List<String> notesIdList;
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "user")
-    private List<Device> devices;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderColumn(name = "position")
+    @Builder.Default
+    private List<ActiveNote> activeNotes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "position")
+    @Builder.Default
+    private List<ArchivedNote> archivedNotes = new ArrayList<>();
+
+    @Builder.Default
+    private int defaultExpirationDays = 14;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private List<Device> devices = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<Token> tokens;
+    @Builder.Default
+    private List<Token> tokens = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -74,5 +88,20 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", role=" + role +
+                ", activeNotes=" + activeNotes +
+                ", archivedNotes=[NOT_LOADED]" +
+                ", defaultExpirationDays=" + defaultExpirationDays +
+                ", tokens=[NOT_LOADED]" +
+                ", devices=[NOT_LOADED]" +
+                '}';
     }
 }

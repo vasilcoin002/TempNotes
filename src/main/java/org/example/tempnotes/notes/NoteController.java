@@ -1,72 +1,79 @@
 package org.example.tempnotes.notes;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tempnotes.DTOs.NoteRequest;
-import org.example.tempnotes.DTOs.UpdateUserNotesRequest;
+import org.example.tempnotes.DTOs.NotesIdRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("api/v1/notes")
 public class NoteController {
-
     private final NoteService noteService;
 
-    @GetMapping("getNotes")
+    // TODO rename in Postman the address
+    @GetMapping("getActiveNotes")
     public ResponseEntity<?> getUserNotes() {
         try {
-            return new ResponseEntity<>(noteService.getUserNotes(), HttpStatus.OK);
+            return new ResponseEntity<>(noteService.getActiveUserNotes(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-    @PostMapping("addNote")
-    public ResponseEntity<?> addNote(@RequestBody NoteRequest noteRequest) {
+    @Transactional
+    @PostMapping("addActiveNote")
+    public ResponseEntity<?> addActiveNote(@RequestBody NoteRequest request) {
         try {
-            return new ResponseEntity<>(noteService.addNote(noteRequest), HttpStatus.CREATED);
+            noteService.addActiveNote(request);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("deleteNote")
-    public ResponseEntity<?> deleteNote(@RequestParam String id) {
+    @Transactional
+    @PutMapping("updateActiveNote")
+    public ResponseEntity<?> updateActiveNote(@RequestBody NoteRequest request) {
         try {
-            noteService.deleteNote(id);
-            return new ResponseEntity<>("Note with id " + id + " has been successfully deleted", HttpStatus.OK);
+            noteService.updateActiveNote(request);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("deleteNotes")
-    public ResponseEntity<?> deleteNotes(@RequestBody UpdateUserNotesRequest request) {
+    @Transactional
+    @PutMapping("updateActiveNotesOrder")
+    public ResponseEntity<?> updateActiveNotesOrder(@RequestBody NotesIdRequest request) {
         try {
-            return new ResponseEntity<>(noteService.deleteNotes(request), HttpStatus.OK);
+            noteService.updateActiveNotesOrder(request);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-    @PutMapping("updateNote")
-    public ResponseEntity<?> updateNote(@RequestBody NoteRequest noteRequest) {
+    @Transactional
+    @DeleteMapping("deleteActiveNote")
+    public ResponseEntity<?> deleteActiveNote(@RequestParam Long id) {
         try {
-            return new ResponseEntity<>(noteService.updateNote(noteRequest), HttpStatus.OK);
+            noteService.deleteActiveNote(id);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-    @PutMapping("updateUserNotesOrder")
-    public ResponseEntity<?> updateUserNotesOrder(@RequestBody UpdateUserNotesRequest userNotesOrderBody) {
+    @Transactional
+    @DeleteMapping("deleteActiveNotes")
+    public ResponseEntity<?> deleteActiveNotes(@RequestBody NotesIdRequest request) {
         try {
-            List<String> newNotesIdList = noteService.updateUserNotesOrder(userNotesOrderBody);
-            return new ResponseEntity<>(newNotesIdList, HttpStatus.OK);
+            noteService.deleteActiveNotes(request);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
